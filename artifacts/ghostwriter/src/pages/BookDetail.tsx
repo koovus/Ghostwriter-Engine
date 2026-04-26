@@ -54,22 +54,11 @@ export default function BookDetail() {
   }, [activeChapterId, book]);
 
   const handleGenerate = async (chapter: Chapter) => {
-    generate(bookId, chapter.chapterNumber, (result, fullText) => {
-      // Done
-      updateChapter.mutate({
-        id: bookId,
-        chapterNumber: chapter.chapterNumber,
-        data: { generatedText: fullText }
-      }, {
-        onSuccess: (updatedChap) => {
-          setEditedText(updatedChap.generatedText || "");
-          queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
-          toast({ title: "Chapter generation complete" });
-        },
-        onError: () => {
-          toast({ title: "Failed to save generated chapter", variant: "destructive" });
-        }
-      });
+    generate(bookId, chapter.chapterNumber, (_result, fullText) => {
+      // Server already persisted generated text; just refresh the cache and sync local state
+      setEditedText(fullText);
+      queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
+      toast({ title: "Chapter generation complete" });
     });
   };
 
@@ -339,7 +328,15 @@ export default function BookDetail() {
                     size="sm"
                     className="border-border/50 text-xs h-7 px-2.5"
                     disabled={generatedCount === 0}
-                    onClick={() => window.location.href = `/api/books/${bookId}/export/${fmt}`}
+                    onClick={() => {
+                      if (generatedCount < chapters.length) {
+                        const ok = window.confirm(
+                          `Only ${generatedCount} of ${chapters.length} chapters have been generated. The export will omit unwritten chapters. Continue?`
+                        );
+                        if (!ok) return;
+                      }
+                      window.location.href = `/api/books/${bookId}/export/${fmt}`;
+                    }}
                   >
                     <Download className="w-3 h-3 mr-1.5" />{label}
                   </Button>
