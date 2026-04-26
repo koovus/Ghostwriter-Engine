@@ -140,8 +140,9 @@ export default function NewBook() {
       const book = await createBook.mutateAsync({ data: { outlineMarkdown: finalOutline } });
       toast({ title: "Project created", description: `Parsed ${preview.chapters.length} chapter${preview.chapters.length !== 1 ? "s" : ""} successfully.` });
       setLocation(`/books/${book.id}`);
-    } catch (error: any) {
-      toast({ title: "Failed to create project", description: error.message || "An error occurred while parsing the outline.", variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An error occurred while parsing the outline.";
+      toast({ title: "Failed to create project", description: message, variant: "destructive" });
     }
   };
 

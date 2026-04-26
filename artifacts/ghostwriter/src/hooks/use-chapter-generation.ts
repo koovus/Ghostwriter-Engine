@@ -73,12 +73,13 @@ export function useChapterGeneration() {
             }
           }
         }
-      } catch (error: any) {
-        if (error.name !== "AbortError") {
+      } catch (error: unknown) {
+        const isAbort = error instanceof DOMException && error.name === "AbortError";
+        if (!isAbort) {
           console.error("Generation error:", error);
           toast({
             title: "Generation failed",
-            description: error.message,
+            description: error instanceof Error ? error.message : "An unexpected error occurred.",
             variant: "destructive",
           });
         }
