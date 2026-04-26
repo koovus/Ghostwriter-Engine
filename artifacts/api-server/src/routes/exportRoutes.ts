@@ -40,7 +40,7 @@ router.get("/books/:id/export/:format", async (req, res) => {
   if (format === "docx") {
     try {
       const { Document, Packer, Paragraph, HeadingLevel, TextRun } = await import("docx");
-      const docChildren: Paragraph[] = [];
+      const docChildren: InstanceType<typeof Paragraph>[] = [];
 
       docChildren.push(
         new Paragraph({ text: book.title, heading: HeadingLevel.TITLE })

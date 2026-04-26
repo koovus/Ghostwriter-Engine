@@ -10,9 +10,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Play, Circle, CheckCircle2, ChevronRight, Settings2, Download, Trash2, X, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Chapter } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { BookWithChapters } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+type Chapter = NonNullable<BookWithChapters["chapters"]>[number];
 
 export default function BookDetail() {
   const params = useParams();
