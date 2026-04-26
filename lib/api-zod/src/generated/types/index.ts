@@ -6,4 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./book";
+export * from "./bookStats";
+export * from "./bookSummary";
+export * from "./bookWithChapters";
+export * from "./chapter";
+export * from "./createBookBody";
+export * from "./createToneSampleBody";
+export * from "./errorResponse";
 export * from "./healthStatus";
+export * from "./toneSample";
+export * from "./updateChapterBody";

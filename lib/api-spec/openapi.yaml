@@ -10,6 +10,14 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: books
+    description: Book management
+  - name: chapters
+    description: Chapter generation and editing
+  - name: tone
+    description: Tone samples for voice modeling
+  - name: export
+    description: Book export
 paths:
   /healthz:
     get:
@@ -24,6 +32,196 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /books:
+    get:
+      operationId: listBooks
+      tags: [books]
+      summary: List all books
+      responses:
+        "200":
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BookSummary"
+    post:
+      operationId: createBook
+      tags: [books]
+      summary: Create a book from an outline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookBody"
+      responses:
+        "201":
+          description: Created book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+
+  /books/{id}:
+    get:
+      operationId: getBook
+      tags: [books]
+      summary: Get a book with all its chapters
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Book with chapters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookWithChapters"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteBook
+      tags: [books]
+      summary: Delete a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /books/{id}/chapters/{chapterNumber}:
+    put:
+      operationId: updateChapter
+      tags: [chapters]
+      summary: Save edited chapter text
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: chapterNumber
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateChapterBody"
+      responses:
+        "200":
+          description: Updated chapter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chapter"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /books/{id}/tone-samples:
+    get:
+      operationId: listToneSamples
+      tags: [tone]
+      summary: List tone samples for a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of tone samples
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ToneSample"
+    post:
+      operationId: createToneSample
+      tags: [tone]
+      summary: Upload a writing sample for tone modeling
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateToneSampleBody"
+      responses:
+        "201":
+          description: Created tone sample
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToneSample"
+
+  /books/{id}/tone-samples/{sampleId}:
+    delete:
+      operationId: deleteToneSample
+      tags: [tone]
+      summary: Delete a tone sample
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sampleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /books/{id}/stats:
+    get:
+      operationId: getBookStats
+      tags: [books]
+      summary: Get book statistics (word count, completion, etc.)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Book stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +232,232 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    CreateBookBody:
+      type: object
+      properties:
+        outlineMarkdown:
+          type: string
+          description: The full markdown outline text
+      required:
+        - outlineMarkdown
+
+    BookSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        genre:
+          type: string
+        audience:
+          type: string
+        chapterCount:
+          type: integer
+        generatedChapterCount:
+          type: integer
+        totalWordCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - genre
+        - audience
+        - chapterCount
+        - generatedChapterCount
+        - totalWordCount
+        - createdAt
+        - updatedAt
+
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        genre:
+          type: string
+        audience:
+          type: string
+        logline:
+          type: string
+        rawOutlineMd:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - genre
+        - audience
+        - logline
+        - rawOutlineMd
+        - createdAt
+        - updatedAt
+
+    Chapter:
+      type: object
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        chapterNumber:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        beatsJson:
+          type: array
+          items:
+            type: string
+        generatedText:
+          type: string
+          nullable: true
+        wordCount:
+          type: integer
+        openerTechnique:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookId
+        - chapterNumber
+        - title
+        - description
+        - beatsJson
+        - generatedText
+        - wordCount
+        - openerTechnique
+        - createdAt
+        - updatedAt
+
+    BookWithChapters:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        genre:
+          type: string
+        audience:
+          type: string
+        logline:
+          type: string
+        rawOutlineMd:
+          type: string
+        chapters:
+          type: array
+          items:
+            $ref: "#/components/schemas/Chapter"
+        toneSamples:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToneSample"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - genre
+        - audience
+        - logline
+        - rawOutlineMd
+        - chapters
+        - toneSamples
+        - createdAt
+        - updatedAt
+
+    UpdateChapterBody:
+      type: object
+      properties:
+        generatedText:
+          type: string
+      required:
+        - generatedText
+
+    ToneSample:
+      type: object
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        label:
+          type: string
+        sampleText:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookId
+        - label
+        - sampleText
+        - createdAt
+
+    CreateToneSampleBody:
+      type: object
+      properties:
+        label:
+          type: string
+        sampleText:
+          type: string
+      required:
+        - label
+        - sampleText
+
+    BookStats:
+      type: object
+      properties:
+        bookId:
+          type: integer
+        totalChapters:
+          type: integer
+        generatedChapters:
+          type: integer
+        totalWordCount:
+          type: integer
+        toneSampleCount:
+          type: integer
+        completionPercent:
+          type: number
+      required:
+        - bookId
+        - totalChapters
+        - generatedChapters
+        - totalWordCount
+        - toneSampleCount
+        - completionPercent

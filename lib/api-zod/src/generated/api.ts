@@ -14,3 +14,153 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary List all books
+ */
+export const ListBooksResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  genre: zod.string(),
+  audience: zod.string(),
+  chapterCount: zod.number(),
+  generatedChapterCount: zod.number(),
+  totalWordCount: zod.number(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListBooksResponse = zod.array(ListBooksResponseItem);
+
+/**
+ * @summary Create a book from an outline
+ */
+export const CreateBookBody = zod.object({
+  outlineMarkdown: zod.string().describe("The full markdown outline text"),
+});
+
+/**
+ * @summary Get a book with all its chapters
+ */
+export const GetBookParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetBookResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  genre: zod.string(),
+  audience: zod.string(),
+  logline: zod.string(),
+  rawOutlineMd: zod.string(),
+  chapters: zod.array(
+    zod.object({
+      id: zod.number(),
+      bookId: zod.number(),
+      chapterNumber: zod.number(),
+      title: zod.string(),
+      description: zod.string(),
+      beatsJson: zod.array(zod.string()),
+      generatedText: zod.string().nullable(),
+      wordCount: zod.number(),
+      openerTechnique: zod.string().nullable(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+  toneSamples: zod.array(
+    zod.object({
+      id: zod.number(),
+      bookId: zod.number(),
+      label: zod.string(),
+      sampleText: zod.string(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a book
+ */
+export const DeleteBookParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Save edited chapter text
+ */
+export const UpdateChapterParams = zod.object({
+  id: zod.coerce.number(),
+  chapterNumber: zod.coerce.number(),
+});
+
+export const UpdateChapterBody = zod.object({
+  generatedText: zod.string(),
+});
+
+export const UpdateChapterResponse = zod.object({
+  id: zod.number(),
+  bookId: zod.number(),
+  chapterNumber: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  beatsJson: zod.array(zod.string()),
+  generatedText: zod.string().nullable(),
+  wordCount: zod.number(),
+  openerTechnique: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List tone samples for a book
+ */
+export const ListToneSamplesParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListToneSamplesResponseItem = zod.object({
+  id: zod.number(),
+  bookId: zod.number(),
+  label: zod.string(),
+  sampleText: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListToneSamplesResponse = zod.array(ListToneSamplesResponseItem);
+
+/**
+ * @summary Upload a writing sample for tone modeling
+ */
+export const CreateToneSampleParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CreateToneSampleBody = zod.object({
+  label: zod.string(),
+  sampleText: zod.string(),
+});
+
+/**
+ * @summary Delete a tone sample
+ */
+export const DeleteToneSampleParams = zod.object({
+  id: zod.coerce.number(),
+  sampleId: zod.coerce.number(),
+});
+
+/**
+ * @summary Get book statistics (word count, completion, etc.)
+ */
+export const GetBookStatsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetBookStatsResponse = zod.object({
+  bookId: zod.number(),
+  totalChapters: zod.number(),
+  generatedChapters: zod.number(),
+  totalWordCount: zod.number(),
+  toneSampleCount: zod.number(),
+  completionPercent: zod.number(),
+});

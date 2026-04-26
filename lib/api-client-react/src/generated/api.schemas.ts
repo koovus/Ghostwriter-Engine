@@ -8,3 +8,88 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface CreateBookBody {
+  /** The full markdown outline text */
+  outlineMarkdown: string;
+}
+
+export interface BookSummary {
+  id: number;
+  title: string;
+  genre: string;
+  audience: string;
+  chapterCount: number;
+  generatedChapterCount: number;
+  totalWordCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Book {
+  id: number;
+  title: string;
+  genre: string;
+  audience: string;
+  logline: string;
+  rawOutlineMd: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Chapter {
+  id: number;
+  bookId: number;
+  chapterNumber: number;
+  title: string;
+  description: string;
+  beatsJson: string[];
+  generatedText: string | null;
+  wordCount: number;
+  openerTechnique: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ToneSample {
+  id: number;
+  bookId: number;
+  label: string;
+  sampleText: string;
+  createdAt: string;
+}
+
+export interface BookWithChapters {
+  id: number;
+  title: string;
+  genre: string;
+  audience: string;
+  logline: string;
+  rawOutlineMd: string;
+  chapters: Chapter[];
+  toneSamples: ToneSample[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateChapterBody {
+  generatedText: string;
+}
+
+export interface CreateToneSampleBody {
+  label: string;
+  sampleText: string;
+}
+
+export interface BookStats {
+  bookId: number;
+  totalChapters: number;
+  generatedChapters: number;
+  totalWordCount: number;
+  toneSampleCount: number;
+  completionPercent: number;
+}
