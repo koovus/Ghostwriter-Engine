@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   booksTable,
@@ -145,8 +145,10 @@ router.put("/books/:id/chapters/:chapterNumber", async (req, res) => {
       updatedAt: new Date(),
     })
     .where(
-      eq(chaptersTable.bookId, bookId) &&
+      and(
+        eq(chaptersTable.bookId, bookId),
         eq(chaptersTable.chapterNumber, chapterNumber)
+      )
     )
     .returning();
 
@@ -173,8 +175,10 @@ router.post("/books/:id/chapters/:chapterNumber/generate", async (req, res) => {
     .select()
     .from(chaptersTable)
     .where(
-      eq(chaptersTable.bookId, bookId) &&
+      and(
+        eq(chaptersTable.bookId, bookId),
         eq(chaptersTable.chapterNumber, chapterNumber)
+      )
     );
 
   if (!chapter) {
@@ -313,8 +317,10 @@ Write only the chapter prose. No chapter title header. No beat labels. No meta-c
         updatedAt: new Date(),
       })
       .where(
-        eq(chaptersTable.bookId, bookId) &&
+        and(
+          eq(chaptersTable.bookId, bookId),
           eq(chaptersTable.chapterNumber, chapterNumber)
+        )
       );
 
     res.write(`data: ${JSON.stringify({ done: true, wordCount: wc, openerTechnique: techniqueName })}\n\n`);

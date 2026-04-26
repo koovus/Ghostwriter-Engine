@@ -119,7 +119,7 @@ export default function BookDetail() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="hidden md:flex border-border/50 text-xs" onClick={() => window.location.href = `/api/books/${bookId}/export/markdown`}>
+          <Button variant="outline" size="sm" className="hidden md:flex border-border/50 text-xs" onClick={() => window.location.href = `/api/books/${bookId}/export/md`}>
             <Download className="w-3.5 h-3.5 mr-2" /> MD
           </Button>
           <Button variant="outline" size="sm" className="hidden md:flex border-border/50 text-xs" onClick={() => window.location.href = `/api/books/${bookId}/export/docx`}>

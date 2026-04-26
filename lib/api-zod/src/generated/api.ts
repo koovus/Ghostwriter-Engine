@@ -164,3 +164,23 @@ export const GetBookStatsResponse = zod.object({
   toneSampleCount: zod.number(),
   completionPercent: zod.number(),
 });
+
+/**
+ * Streams AI-generated chapter prose via Server-Sent Events (text/event-stream). Each SSE event carries a JSON payload. Token events have `{ content: string }`. The final event has `{ done: true, wordCount: number, openerTechnique: string }`.
+
+ * @summary Generate chapter text via SSE streaming
+ */
+export const GenerateChapterParams = zod.object({
+  id: zod.coerce.number(),
+  chapterNumber: zod.coerce.number(),
+});
+
+/**
+ * Downloads the book as a file. Supported formats: `md` (Markdown), `docx` (Word), `pdf` (PDF, A4), `epub` (EPUB3, KDP-compatible).
+
+ * @summary Export book as a file download
+ */
+export const ExportBookParams = zod.object({
+  id: zod.coerce.number(),
+  format: zod.enum(["md", "docx", "pdf", "epub"]),
+});

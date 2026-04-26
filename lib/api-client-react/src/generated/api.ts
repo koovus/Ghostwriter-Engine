@@ -862,3 +862,188 @@ export function useGetBookStats<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * Streams AI-generated chapter prose via Server-Sent Events (text/event-stream). Each SSE event carries a JSON payload. Token events have `{ content: string }`. The final event has `{ done: true, wordCount: number, openerTechnique: string }`.
+
+ * @summary Generate chapter text via SSE streaming
+ */
+export const getGenerateChapterUrl = (id: number, chapterNumber: number) => {
+  return `/api/books/${id}/chapters/${chapterNumber}/generate`;
+};
+
+export const generateChapter = async (
+  id: number,
+  chapterNumber: number,
+  options?: RequestInit,
+): Promise<string> => {
+  return customFetch<string>(getGenerateChapterUrl(id, chapterNumber), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getGenerateChapterMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateChapter>>,
+    TError,
+    { id: number; chapterNumber: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateChapter>>,
+  TError,
+  { id: number; chapterNumber: number },
+  TContext
+> => {
+  const mutationKey = ["generateChapter"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateChapter>>,
+    { id: number; chapterNumber: number }
+  > = (props) => {
+    const { id, chapterNumber } = props ?? {};
+
+    return generateChapter(id, chapterNumber, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateChapterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateChapter>>
+>;
+
+export type GenerateChapterMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Generate chapter text via SSE streaming
+ */
+export const useGenerateChapter = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateChapter>>,
+    TError,
+    { id: number; chapterNumber: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateChapter>>,
+  TError,
+  { id: number; chapterNumber: number },
+  TContext
+> => {
+  return useMutation(getGenerateChapterMutationOptions(options));
+};
+
+/**
+ * Downloads the book as a file. Supported formats: `md` (Markdown), `docx` (Word), `pdf` (PDF, A4), `epub` (EPUB3, KDP-compatible).
+
+ * @summary Export book as a file download
+ */
+export const getExportBookUrl = (
+  id: number,
+  format: "md" | "docx" | "pdf" | "epub",
+) => {
+  return `/api/books/${id}/export/${format}`;
+};
+
+export const exportBook = async (
+  id: number,
+  format: "md" | "docx" | "pdf" | "epub",
+  options?: RequestInit,
+): Promise<Blob | string> => {
+  return customFetch<Blob | string>(getExportBookUrl(id, format), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportBookQueryKey = (
+  id: number,
+  format: "md" | "docx" | "pdf" | "epub",
+) => {
+  return [`/api/books/${id}/export/${format}`] as const;
+};
+
+export const getExportBookQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportBook>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: number,
+  format: "md" | "docx" | "pdf" | "epub",
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof exportBook>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportBookQueryKey(id, format);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportBook>>> = ({
+    signal,
+  }) => exportBook(id, format, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(id && format),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportBook>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ExportBookQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportBook>>
+>;
+export type ExportBookQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Export book as a file download
+ */
+
+export function useExportBook<
+  TData = Awaited<ReturnType<typeof exportBook>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: number,
+  format: "md" | "docx" | "pdf" | "epub",
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof exportBook>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getExportBookQueryOptions(id, format, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

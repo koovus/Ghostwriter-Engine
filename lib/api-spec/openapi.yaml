@@ -222,6 +222,96 @@ paths:
               schema:
                 $ref: "#/components/schemas/BookStats"
 
+  /books/{id}/chapters/{chapterNumber}/generate:
+    post:
+      operationId: generateChapter
+      tags: [chapters]
+      summary: Generate chapter text via SSE streaming
+      description: >
+        Streams AI-generated chapter prose via Server-Sent Events (text/event-stream).
+        Each SSE event carries a JSON payload. Token events have `{ content: string }`.
+        The final event has `{ done: true, wordCount: number, openerTechnique: string }`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: chapterNumber
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: SSE stream of generated chapter tokens
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "404":
+          description: Book or chapter not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /books/{id}/export/{format}:
+    get:
+      operationId: exportBook
+      tags: [export]
+      summary: Export book as a file download
+      description: >
+        Downloads the book as a file. Supported formats: `md` (Markdown), `docx` (Word),
+        `pdf` (PDF, A4), `epub` (EPUB3, KDP-compatible).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: format
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [md, docx, pdf, epub]
+      responses:
+        "200":
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            text/markdown:
+              schema:
+                type: string
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/epub+zip:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Invalid format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Book not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
