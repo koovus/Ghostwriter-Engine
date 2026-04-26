@@ -121,7 +121,8 @@ export const UpdateChapterParams = zod.object({
 });
 
 export const UpdateChapterBody = zod.object({
-  generatedText: zod.string(),
+  generatedText: zod.string().optional(),
+  beatsJson: zod.array(zod.string()).optional(),
 });
 
 export const UpdateChapterResponse = zod.object({

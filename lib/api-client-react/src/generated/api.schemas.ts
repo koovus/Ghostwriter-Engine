@@ -84,7 +84,8 @@ export interface UpdateBookBody {
 }
 
 export interface UpdateChapterBody {
-  generatedText: string;
+  generatedText?: string;
+  beatsJson?: string[];
 }
 
 export interface CreateToneSampleBody {

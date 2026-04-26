@@ -169,16 +169,20 @@ router.put("/books/:id/chapters/:chapterNumber", async (req, res) => {
     return;
   }
 
-  const { generatedText } = parse.data;
-  const wc = countWords(generatedText);
+  const { generatedText, beatsJson } = parse.data;
+
+  const patch: Record<string, unknown> = { updatedAt: new Date() };
+  if (generatedText !== undefined) {
+    patch.generatedText = generatedText;
+    patch.wordCount = countWords(generatedText);
+  }
+  if (beatsJson !== undefined) {
+    patch.beats = beatsJson;
+  }
 
   const [updated] = await db
     .update(chaptersTable)
-    .set({
-      generatedText,
-      wordCount: wc,
-      updatedAt: new Date(),
-    })
+    .set(patch)
     .where(
       and(
         eq(chaptersTable.bookId, bookId),

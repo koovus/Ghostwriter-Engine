@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Play, Circle, CheckCircle2, ChevronRight, ChevronLeft, Settings2, Download, Trash2, X, RefreshCw, BookOpen, Pencil } from "lucide-react";
+import { Loader2, Play, Circle, CheckCircle2, ChevronRight, ChevronLeft, Settings2, Download, Trash2, X, RefreshCw, BookOpen, Pencil, Plus, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { BookWithChapters } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,8 @@ export default function BookDetail() {
   const [editGenre, setEditGenre] = useState("");
   const [editAudience, setEditAudience] = useState("");
   const [editLogline, setEditLogline] = useState("");
+  const [editingBeats, setEditingBeats] = useState(false);
+  const [draftBeats, setDraftBeats] = useState<string[]>([]);
 
   const updateBook = useUpdateBook();
 
@@ -53,11 +55,13 @@ export default function BookDetail() {
     }
   }, [book, activeChapterId]);
 
-  // Sync edited text when active chapter changes
+  // Sync edited text and reset beats edit mode when active chapter changes
   useEffect(() => {
     if (activeChapter) {
       setEditedText(activeChapter.generatedText || "");
     }
+    setEditingBeats(false);
+    setDraftBeats([]);
   }, [activeChapterId, book]);
 
   const handleGenerate = async (chapter: Chapter) => {
@@ -81,6 +85,33 @@ export default function BookDetail() {
         toast({ title: "Edits saved" });
       }
     });
+  };
+
+  const startEditBeats = () => {
+    if (!activeChapter) return;
+    setDraftBeats([...(activeChapter.beatsJson as string[])]);
+    setEditingBeats(true);
+  };
+
+  const saveBeats = () => {
+    if (!activeChapter) return;
+    const cleaned = draftBeats.map(b => b.trim()).filter(Boolean);
+    updateChapter.mutate({
+      id: bookId,
+      chapterNumber: activeChapter.chapterNumber,
+      data: { beatsJson: cleaned }
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
+        setEditingBeats(false);
+        toast({ title: "Beats updated" });
+      }
+    });
+  };
+
+  const cancelEditBeats = () => {
+    setEditingBeats(false);
+    setDraftBeats([]);
   };
 
   const openEditPanel = () => {
@@ -282,15 +313,107 @@ export default function BookDetail() {
 
                 {/* Beats */}
                 <div className="mt-6 pt-6 border-t border-border/20">
-                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-3">Narrative Beats</h4>
-                  <ul className="space-y-2">
-                    {activeChapter.beatsJson.map((beat, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-foreground/80">
-                        <ChevronRight className="w-4 h-4 text-primary/50 shrink-0 mt-0.5" />
-                        <span className="leading-relaxed">{beat}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Narrative Beats</h4>
+                    {!editingBeats ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={startEditBeats}
+                        disabled={isGenerating}
+                      >
+                        <Pencil className="w-3 h-3 mr-1" /> Edit
+                      </Button>
+                    ) : (
+                      <div className="flex gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                          onClick={cancelEditBeats}
+                        >
+                          <X className="w-3 h-3 mr-1" /> Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={saveBeats}
+                          disabled={updateChapter.isPending}
+                        >
+                          {updateChapter.isPending ? (
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          ) : (
+                            <Check className="w-3 h-3 mr-1" />
+                          )}
+                          Save
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {editingBeats ? (
+                    <div className="space-y-2">
+                      {draftBeats.map((beat, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className="text-xs text-primary/40 font-mono w-4 shrink-0 text-right">{idx + 1}</span>
+                          <Input
+                            value={beat}
+                            onChange={(e) => {
+                              const next = [...draftBeats];
+                              next[idx] = e.target.value;
+                              setDraftBeats(next);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const next = [...draftBeats];
+                                next.splice(idx + 1, 0, "");
+                                setDraftBeats(next);
+                              } else if (e.key === "Backspace" && beat === "" && draftBeats.length > 1) {
+                                e.preventDefault();
+                                const next = draftBeats.filter((_, i) => i !== idx);
+                                setDraftBeats(next);
+                              }
+                            }}
+                            className="flex-1 h-8 text-sm bg-secondary/30 border-border/40"
+                            placeholder={`Beat ${idx + 1}…`}
+                            autoFocus={idx === draftBeats.length - 1 && beat === ""}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => {
+                              if (draftBeats.length > 1) {
+                                setDraftBeats(draftBeats.filter((_, i) => i !== idx));
+                              }
+                            }}
+                            disabled={draftBeats.length <= 1}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-dashed border-border/40 text-xs text-muted-foreground h-7 mt-1"
+                        onClick={() => setDraftBeats([...draftBeats, ""])}
+                      >
+                        <Plus className="w-3 h-3 mr-1" /> Add Beat
+                      </Button>
+                    </div>
+                  ) : (
+                    <ul className="space-y-2">
+                      {(activeChapter.beatsJson as string[]).map((beat, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-foreground/80">
+                          <ChevronRight className="w-4 h-4 text-primary/50 shrink-0 mt-0.5" />
+                          <span className="leading-relaxed">{beat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
 
