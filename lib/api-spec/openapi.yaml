@@ -89,6 +89,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateBook
+      tags: [books]
+      summary: Update book metadata (title, genre, audience, logline)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookBody"
+      responses:
+        "200":
+          description: Updated book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Invalid id or request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
       operationId: deleteBook
       tags: [books]
@@ -488,6 +523,18 @@ components:
         - toneSamples
         - createdAt
         - updatedAt
+
+    UpdateBookBody:
+      type: object
+      properties:
+        title:
+          type: string
+        genre:
+          type: string
+        audience:
+          type: string
+        logline:
+          type: string
 
     UpdateChapterBody:
       type: object

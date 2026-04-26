@@ -76,6 +76,13 @@ export interface BookWithChapters {
   updatedAt: string;
 }
 
+export interface UpdateBookBody {
+  title?: string;
+  genre?: string;
+  audience?: string;
+  logline?: string;
+}
+
 export interface UpdateChapterBody {
   generatedText: string;
 }

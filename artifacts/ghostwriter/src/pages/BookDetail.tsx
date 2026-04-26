@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
-import { useGetBook, getGetBookQueryKey, useUpdateChapter, useListToneSamples, getListToneSamplesQueryKey, useCreateToneSample, useDeleteToneSample } from "@workspace/api-client-react";
+import { useGetBook, getGetBookQueryKey, useUpdateChapter, useUpdateBook, useListToneSamples, getListToneSamplesQueryKey, getListBooksQueryKey, useCreateToneSample, useDeleteToneSample } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useChapterGeneration } from "@/hooks/use-chapter-generation";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Play, Circle, CheckCircle2, ChevronRight, ChevronLeft, Settings2, Download, Trash2, X, RefreshCw, BookOpen } from "lucide-react";
+import { Loader2, Play, Circle, CheckCircle2, ChevronRight, ChevronLeft, Settings2, Download, Trash2, X, RefreshCw, BookOpen, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { BookWithChapters } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,13 @@ export default function BookDetail() {
   const [activeChapterId, setActiveChapterId] = useState<number | null>(null);
   const [editedText, setEditedText] = useState("");
   const [showTonePanel, setShowTonePanel] = useState(false);
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editGenre, setEditGenre] = useState("");
+  const [editAudience, setEditAudience] = useState("");
+  const [editLogline, setEditLogline] = useState("");
+
+  const updateBook = useUpdateBook();
 
   const { generate, isGenerating, streamingText, cancel } = useChapterGeneration();
   const updateChapter = useUpdateChapter();
@@ -72,6 +79,37 @@ export default function BookDetail() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
         toast({ title: "Edits saved" });
+      }
+    });
+  };
+
+  const openEditPanel = () => {
+    if (!book) return;
+    setEditTitle(book.title ?? "");
+    setEditGenre(book.genre ?? "");
+    setEditAudience(book.audience ?? "");
+    setEditLogline(book.logline ?? "");
+    setShowEditPanel(true);
+  };
+
+  const handleSaveBookMetadata = () => {
+    updateBook.mutate({
+      id: bookId,
+      data: {
+        title: editTitle,
+        genre: editGenre,
+        audience: editAudience,
+        logline: editLogline,
+      }
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
+        queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() });
+        setShowEditPanel(false);
+        toast({ title: "Book details updated" });
+      },
+      onError: () => {
+        toast({ title: "Failed to save changes", variant: "destructive" });
       }
     });
   };
@@ -134,6 +172,9 @@ export default function BookDetail() {
             <Download className="w-3.5 h-3.5 mr-2" /> EPUB
           </Button>
           <div className="w-px h-6 bg-border/50 mx-2" />
+          <Button variant={showEditPanel ? "secondary" : "ghost"} size="sm" onClick={() => showEditPanel ? setShowEditPanel(false) : openEditPanel()} title="Edit book details">
+            <Pencil className="w-4 h-4 mr-2" /> Edit Details
+          </Button>
           <Button variant={showTonePanel ? "secondary" : "ghost"} size="sm" onClick={() => setShowTonePanel(!showTonePanel)}>
             <Settings2 className="w-4 h-4 mr-2" /> Voice & Tone
           </Button>
@@ -345,6 +386,80 @@ export default function BookDetail() {
             </div>
           </div>
         </div>
+
+        {/* Edit Panel */}
+        {showEditPanel && (
+          <div className="w-80 border-l border-border/40 bg-secondary/10 flex flex-col shrink-0 animate-in slide-in-from-right-8 duration-300">
+            <div className="p-4 border-b border-border/40 flex items-center justify-between">
+              <h3 className="text-sm font-medium uppercase tracking-widest">Book Details</h3>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowEditPanel(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Update the title and metadata for this book. Changes will be reflected across all chapter generation prompts.
+                </p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-title" className="text-xs">Title</Label>
+                  <Input
+                    id="edit-title"
+                    value={editTitle}
+                    onChange={e => setEditTitle(e.target.value)}
+                    placeholder="Book title"
+                    className="bg-background text-sm h-8"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-genre" className="text-xs">Genre</Label>
+                  <Input
+                    id="edit-genre"
+                    value={editGenre}
+                    onChange={e => setEditGenre(e.target.value)}
+                    placeholder="e.g. Science Fiction, Thriller"
+                    className="bg-background text-sm h-8"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-audience" className="text-xs">Audience</Label>
+                  <Input
+                    id="edit-audience"
+                    value={editAudience}
+                    onChange={e => setEditAudience(e.target.value)}
+                    placeholder="e.g. Young Adult, General adult"
+                    className="bg-background text-sm h-8"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-logline" className="text-xs">Logline</Label>
+                  <Textarea
+                    id="edit-logline"
+                    value={editLogline}
+                    onChange={e => setEditLogline(e.target.value)}
+                    placeholder="One-sentence hook for the book..."
+                    className="bg-background text-sm min-h-[80px] resize-none"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleSaveBookMetadata}
+                  disabled={updateBook.isPending || !editTitle.trim()}
+                  className="w-full text-xs"
+                  size="sm"
+                >
+                  {updateBook.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+                  Save Changes
+                </Button>
+              </div>
+            </ScrollArea>
+          </div>
+        )}
 
         {/* Tone Panel */}
         {showTonePanel && (

@@ -8,6 +8,7 @@ import {
 } from "@workspace/db";
 import {
   CreateBookBody,
+  UpdateBookBody,
   UpdateChapterBody,
   CreateToneSampleBody,
 } from "@workspace/api-zod";
@@ -110,6 +111,40 @@ router.get("/books/:id", async (req, res) => {
     .where(eq(toneSamplesTable.bookId, id));
 
   res.json({ ...book, chapters, toneSamples });
+});
+
+// ── UPDATE BOOK METADATA ─────────────────────────────────────────────────────
+router.patch("/books/:id", async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const parse = UpdateBookBody.safeParse(req.body);
+  if (!parse.success) {
+    res.status(400).json({ error: parse.error.message });
+    return;
+  }
+
+  const updates: Record<string, unknown> = { updatedAt: new Date() };
+  if (parse.data.title !== undefined) updates.title = parse.data.title;
+  if (parse.data.genre !== undefined) updates.genre = parse.data.genre;
+  if (parse.data.audience !== undefined) updates.audience = parse.data.audience;
+  if (parse.data.logline !== undefined) updates.logline = parse.data.logline;
+
+  const [updated] = await db
+    .update(booksTable)
+    .set(updates)
+    .where(eq(booksTable.id, id))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Book not found" });
+    return;
+  }
+
+  res.json(updated);
 });
 
 // ── DELETE BOOK ──────────────────────────────────────────────────────────────

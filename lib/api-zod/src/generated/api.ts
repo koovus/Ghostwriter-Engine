@@ -81,6 +81,31 @@ export const GetBookResponse = zod.object({
 });
 
 /**
+ * @summary Update book metadata (title, genre, audience, logline)
+ */
+export const UpdateBookParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateBookBody = zod.object({
+  title: zod.string().optional(),
+  genre: zod.string().optional(),
+  audience: zod.string().optional(),
+  logline: zod.string().optional(),
+});
+
+export const UpdateBookResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  genre: zod.string(),
+  audience: zod.string(),
+  logline: zod.string(),
+  rawOutlineMd: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
  * @summary Delete a book
  */
 export const DeleteBookParams = zod.object({
