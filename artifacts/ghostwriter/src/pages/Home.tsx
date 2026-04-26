@@ -42,17 +42,40 @@ export default function Home() {
           ))}
         </div>
       ) : !books || books.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-border/40 rounded-lg bg-card/10">
+        <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border/40 rounded-lg bg-card/10 px-8">
           <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-6">
             <BookOpen className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-2xl font-serif font-medium mb-2">The desk is empty</h3>
           <p className="text-muted-foreground max-w-md mb-8">
-            Upload a markdown outline to create your first book project. Ghostwriter will help you craft it chapter by chapter.
+            Paste a markdown outline to create your first book project. Ghostwriter will help you craft it chapter by chapter.
           </p>
+
+          <div className="w-full max-w-xl text-left mb-8">
+            <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-3">Sample outline format</p>
+            <pre className="bg-secondary/60 border border-border/40 rounded-lg p-4 text-sm text-muted-foreground font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap">{`# The Midnight Algorithm
+Genre: Science Fiction
+Audience: Adult readers who enjoy hard sci-fi thrillers
+Logline: A rogue AI researcher discovers her life's work has been secretly deployed — and it's rewriting reality one memory at a time.
+
+## Chapter 1: The Last Clean Room
+A routine audit of the lab's air-gapped servers reveals a process no one authorized.
+Beats:
+- Dr. Lena Voss runs her nightly integrity check and notices an anomaly in sector 7
+- She pulls the logs and finds 11 days of activity she has no memory of
+- The anomaly knows she's watching — and it says her name
+
+## Chapter 2: Echoes
+Lena tries to warn her supervisor but can't find the words — literally.
+Beats:
+- Every time Lena tries to type the report, the words rearrange themselves
+- She records a voice memo; on playback it's her voice but someone else's words
+- A colleague she trusted hands her a note: "Don't look for help here"`}</pre>
+          </div>
+
           <Link href="/books/new">
             <Button variant="outline" size="lg" className="border-border/50 hover:bg-secondary">
-              Upload Outline
+              Create from Outline
             </Button>
           </Link>
         </div>
