@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Play, Circle, CheckCircle2, ChevronRight, Settings2, Download, Trash2, X, RefreshCw } from "lucide-react";
+import { Loader2, Play, Circle, CheckCircle2, ChevronRight, ChevronLeft, Settings2, Download, Trash2, X, RefreshCw, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { BookWithChapters } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -107,6 +107,17 @@ export default function BookDetail() {
     });
   };
 
+  // Computed chapter navigation
+  const chapters = book?.chapters ?? [];
+  const activeChapterIndex = chapters.findIndex((c) => c.id === activeChapterId);
+  const prevChapter = activeChapterIndex > 0 ? chapters[activeChapterIndex - 1] : null;
+  const nextChapter = activeChapterIndex < chapters.length - 1 ? chapters[activeChapterIndex + 1] : null;
+
+  // Computed book stats
+  const generatedCount = chapters.filter((c) => !!c.generatedText).length;
+  const totalWordCount = chapters.reduce((sum, c) => sum + (c.wordCount || 0), 0);
+  const completionPct = chapters.length > 0 ? Math.round((generatedCount / chapters.length) * 100) : 0;
+
   if (isLoading) return <div className="flex h-[calc(100vh-4rem)] items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>;
   if (!book) return <div className="p-8 text-center text-muted-foreground">Book not found</div>;
 
@@ -198,7 +209,28 @@ export default function BookDetail() {
                       </div>
                     )}
                   </div>
-                  <div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="border-border/50 h-9 w-9"
+                      disabled={!prevChapter || isGenerating}
+                      onClick={() => prevChapter && setActiveChapterId(prevChapter.id)}
+                      title={prevChapter ? `Chapter ${prevChapter.chapterNumber}: ${prevChapter.title}` : "No previous chapter"}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="border-border/50 h-9 w-9"
+                      disabled={!nextChapter || isGenerating}
+                      onClick={() => nextChapter && setActiveChapterId(nextChapter.id)}
+                      title={nextChapter ? `Chapter ${nextChapter.chapterNumber}: ${nextChapter.title}` : "No next chapter"}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                    <div className="w-px h-6 bg-border/50 mx-1" />
                     {isGenerating ? (
                       <Button variant="destructive" onClick={cancel} className="font-medium">
                         <X className="w-4 h-4 mr-2" /> Stop Generation
@@ -262,12 +294,59 @@ export default function BookDetail() {
                   </div>
                 )}
               </div>
+
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              Select a chapter to begin
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground">
+              <BookOpen className="w-12 h-12 opacity-20" />
+              <p className="font-serif text-lg italic opacity-50">Select a chapter to begin writing.</p>
             </div>
           )}
+
+          {/* Export Panel — always visible at the bottom */}
+          <div className="shrink-0 border-t border-border/20 bg-secondary/10 px-8 py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <BookOpen className="w-4 h-4 text-primary/60" />
+                  <span className="font-medium text-foreground">{generatedCount}</span>
+                  <span>/ {chapters.length} chapters written</span>
+                </div>
+                {totalWordCount > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{totalWordCount.toLocaleString()}</span>
+                    {" "}total words
+                  </div>
+                )}
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="w-24 h-1.5 bg-border/40 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${completionPct}%` }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{completionPct}%</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground hidden sm:block mr-1">Export:</span>
+                {[
+                  { fmt: "md", label: "MD" },
+                  { fmt: "docx", label: "DOCX" },
+                  { fmt: "pdf", label: "PDF" },
+                  { fmt: "epub", label: "EPUB" },
+                ].map(({ fmt, label }) => (
+                  <Button
+                    key={fmt}
+                    variant="outline"
+                    size="sm"
+                    className="border-border/50 text-xs h-7 px-2.5"
+                    disabled={generatedCount === 0}
+                    onClick={() => window.location.href = `/api/books/${bookId}/export/${fmt}`}
+                  >
+                    <Download className="w-3 h-3 mr-1.5" />{label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Tone Panel */}

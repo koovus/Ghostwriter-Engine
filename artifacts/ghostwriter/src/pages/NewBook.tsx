@@ -63,11 +63,21 @@ export default function NewBook() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [outline, setOutline] = useState("");
+  const [titleOverride, setTitleOverride] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const createBook = useCreateBook();
 
   const preview = parsePreview(outline);
+
+  // Pre-populate title from parsed outline when it changes
+  const handleOutlineChange = (text: string) => {
+    setOutline(text);
+    const parsed = parsePreview(text);
+    if (parsed.title && !titleOverride) {
+      setTitleOverride(parsed.title);
+    }
+  };
 
   const handleFile = useCallback((file: File) => {
     if (!file.name.match(/\.(md|txt|markdown)$/i)) {
@@ -78,6 +88,8 @@ export default function NewBook() {
     reader.onload = (e) => {
       const text = e.target?.result as string;
       setOutline(text || "");
+      const parsed = parsePreview(text || "");
+      if (parsed.title) setTitleOverride(parsed.title);
     };
     reader.readAsText(file);
   }, [toast]);
@@ -111,8 +123,21 @@ export default function NewBook() {
       toast({ title: "No chapters detected", description: "Use ## Chapter 1: Title format for each chapter.", variant: "destructive" });
       return;
     }
+
+    // If user overrode the title, inject it into the outline as the H1
+    let finalOutline = outline;
+    const effectiveTitle = titleOverride.trim() || preview.title;
+    if (effectiveTitle && effectiveTitle !== preview.title) {
+      const firstH1 = /^#\s+.+$/m;
+      if (firstH1.test(finalOutline)) {
+        finalOutline = finalOutline.replace(firstH1, `# ${effectiveTitle}`);
+      } else {
+        finalOutline = `# ${effectiveTitle}\n\n${finalOutline}`;
+      }
+    }
+
     try {
-      const book = await createBook.mutateAsync({ data: { outlineMarkdown: outline } });
+      const book = await createBook.mutateAsync({ data: { outlineMarkdown: finalOutline } });
       toast({ title: "Project created", description: `Parsed ${preview.chapters.length} chapter${preview.chapters.length !== 1 ? "s" : ""} successfully.` });
       setLocation(`/books/${book.id}`);
     } catch (error: any) {
@@ -143,7 +168,7 @@ export default function NewBook() {
             <Textarea
               data-testid="outline-textarea"
               value={outline}
-              onChange={(e) => setOutline(e.target.value)}
+              onChange={(e) => handleOutlineChange(e.target.value)}
               placeholder="Paste your markdown outline here, or drag and drop a .md file..."
               className="min-h-[420px] font-mono text-sm leading-relaxed p-6 bg-transparent border-0 focus-visible:ring-0 resize-y"
             />
@@ -184,7 +209,6 @@ export default function NewBook() {
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <FileText className="w-4 h-4 text-primary" />
                   Detected {preview.chapters.length} chapter{preview.chapters.length !== 1 ? "s" : ""}
-                  {preview.title && <span className="text-muted-foreground font-normal">in &ldquo;{preview.title}&rdquo;</span>}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -201,6 +225,23 @@ export default function NewBook() {
                 </ul>
               </CardContent>
             </Card>
+          )}
+
+          {preview.chapters.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="book-title-override" className="text-sm font-medium">
+                Book Title
+              </Label>
+              <Input
+                id="book-title-override"
+                data-testid="book-title-input"
+                value={titleOverride}
+                onChange={(e) => setTitleOverride(e.target.value)}
+                placeholder="Enter your book title..."
+                className="bg-secondary/30 border-border/50 text-base font-serif"
+              />
+              <p className="text-xs text-muted-foreground">Auto-detected from your outline — edit to rename.</p>
+            </div>
           )}
 
           <div className="flex justify-end pt-2">
