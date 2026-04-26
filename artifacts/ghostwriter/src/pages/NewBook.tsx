@@ -1,62 +1,122 @@
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { useCreateBook } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { FileDown, Sparkles, Loader2, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { FileDown, Sparkles, Loader2, ArrowLeft, Upload, FileText, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
-const INSTRUCTIONS = `Format your outline in Markdown.
-Use an H1 (#) for the Book Title.
-Use H2 (##) for Chapters.
-Use bullet points (-) for the narrative beats in each chapter.
-
-Example:
-# The Midnight Library
+const EXAMPLE = `# The Midnight Library
 Genre: Fantasy
 Audience: Young Adult
+Logline: Every book in this library contains a life Nora could have lived.
 
 ## Chapter 1: The Last Book
-- Nora finds herself in a vast library.
-- She meets Mrs. Elm, the librarian.
-- They discuss the nature of regrets.`;
+- Nora finds herself in a vast library at the moment of her death
+- She meets Mrs. Elm, the librarian who guided her through school
+- They discuss the nature of regrets and second chances
+
+## Chapter 2: Another Life
+- Nora opens her first book and slides into a parallel life
+- She discovers what success without passion feels like
+- Cliffhanger: she hears her name called from another shelf`;
+
+interface DetectedChapter {
+  number: number;
+  title: string;
+  beats: number;
+}
+
+function parsePreview(md: string): { title: string; chapters: DetectedChapter[] } {
+  const lines = md.split("\n");
+  let title = "";
+  const chapters: DetectedChapter[] = [];
+  let currentChapter: DetectedChapter | null = null;
+
+  for (const raw of lines) {
+    const t = raw.trim();
+    if (t.startsWith("# ") && !title) {
+      title = t.slice(2).trim();
+      continue;
+    }
+    const h2 = t.match(/^##\s+(?:Chapter\s+)?(\d+)[:\s–-]+(.+)$/i);
+    const h3 = t.match(/^###\s+(?:Chapter\s+)?(\d+)[:\s–-]+(.+)$/i);
+    const match = h2 || h3;
+    if (match) {
+      if (currentChapter) chapters.push(currentChapter);
+      currentChapter = { number: parseInt(match[1], 10), title: match[2].trim(), beats: 0 };
+      continue;
+    }
+    if (currentChapter && (t.startsWith("- ") || t.startsWith("* ") || t.match(/^\*\*Beat/i))) {
+      currentChapter.beats++;
+    }
+  }
+  if (currentChapter) chapters.push(currentChapter);
+  return { title, chapters };
+}
 
 export default function NewBook() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [outline, setOutline] = useState("");
-  
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const createBook = useCreateBook();
+
+  const preview = parsePreview(outline);
+
+  const handleFile = useCallback((file: File) => {
+    if (!file.name.match(/\.(md|txt|markdown)$/i)) {
+      toast({ title: "Unsupported file type", description: "Please upload a .md or .txt file.", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      setOutline(text || "");
+    };
+    reader.readAsText(file);
+  }, [toast]);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => setIsDragging(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+    e.target.value = "";
+  };
 
   const handleSubmit = async () => {
     if (!outline.trim()) {
-      toast({
-        title: "Outline required",
-        description: "Please provide a markdown outline to create your book.",
-        variant: "destructive"
-      });
+      toast({ title: "Outline required", description: "Paste your markdown outline or upload a file.", variant: "destructive" });
       return;
     }
-
+    if (preview.chapters.length === 0) {
+      toast({ title: "No chapters detected", description: "Use ## Chapter 1: Title format for each chapter.", variant: "destructive" });
+      return;
+    }
     try {
-      const book = await createBook.mutateAsync({
-        data: { outlineMarkdown: outline }
-      });
-      
-      toast({
-        title: "Project created",
-        description: `Successfully parsed book with chapters.`,
-      });
-      
+      const book = await createBook.mutateAsync({ data: { outlineMarkdown: outline } });
+      toast({ title: "Project created", description: `Parsed ${preview.chapters.length} chapter${preview.chapters.length !== 1 ? "s" : ""} successfully.` });
       setLocation(`/books/${book.id}`);
     } catch (error: any) {
-      toast({
-        title: "Failed to create project",
-        description: error.message || "An error occurred while parsing the outline.",
-        variant: "destructive"
-      });
+      toast({ title: "Failed to create project", description: error.message || "An error occurred while parsing the outline.", variant: "destructive" });
     }
   };
 
@@ -69,35 +129,92 @@ export default function NewBook() {
           </Button>
         </Link>
         <h1 className="text-4xl font-serif font-medium tracking-tight mb-3">Initialize Project</h1>
-        <p className="text-muted-foreground text-lg">Paste your structured markdown outline below. Ghostwriter will parse the title, metadata, and chapter beats automatically.</p>
+        <p className="text-muted-foreground text-lg">Paste your structured markdown outline, or upload a .md or .txt file. Ghostwriter parses the title, metadata, and chapter beats automatically.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8">
-        <div className="space-y-6">
-          <div className="relative">
+        <div className="space-y-4">
+          <div
+            className={`relative rounded-md border-2 border-dashed transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-border/40 bg-transparent"}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <Textarea
+              data-testid="outline-textarea"
               value={outline}
               onChange={(e) => setOutline(e.target.value)}
-              placeholder="Paste your markdown outline here..."
-              className="min-h-[500px] font-mono text-sm leading-relaxed p-6 bg-card border-border/50 focus-visible:ring-primary/50 resize-y"
+              placeholder="Paste your markdown outline here, or drag and drop a .md file..."
+              className="min-h-[420px] font-mono text-sm leading-relaxed p-6 bg-transparent border-0 focus-visible:ring-0 resize-y"
             />
+            {isDragging && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-md pointer-events-none">
+                <div className="flex flex-col items-center gap-2 text-primary">
+                  <Upload className="w-10 h-10" />
+                  <span className="text-sm font-medium">Drop to upload</span>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="flex justify-end">
-            <Button 
-              size="lg" 
-              onClick={handleSubmit} 
-              disabled={createBook.isPending}
+          <div className="flex items-center gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".md,.txt,.markdown"
+              onChange={handleFileInput}
+              className="hidden"
+              data-testid="file-input"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="border-border/50 text-muted-foreground hover:text-foreground"
+              data-testid="upload-file-btn"
+            >
+              <Upload className="w-4 h-4 mr-2" /> Upload File (.md / .txt)
+            </Button>
+            <span className="text-xs text-muted-foreground">or drag and drop onto the text area</span>
+          </div>
+
+          {preview.chapters.length > 0 && (
+            <Card className="bg-secondary/20 border-border/30" data-testid="chapter-preview">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  Detected {preview.chapters.length} chapter{preview.chapters.length !== 1 ? "s" : ""}
+                  {preview.title && <span className="text-muted-foreground font-normal">in &ldquo;{preview.title}&rdquo;</span>}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-1.5" data-testid="chapter-list-preview">
+                  {preview.chapters.map((ch) => (
+                    <li key={ch.number} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <ChevronRight className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                      <span>
+                        <span className="text-foreground font-medium">Chapter {ch.number}: {ch.title}</span>
+                        {ch.beats > 0 && <span className="ml-2 text-xs opacity-60">{ch.beats} beat{ch.beats !== 1 ? "s" : ""}</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <Button
+              data-testid="create-book-btn"
+              size="lg"
+              onClick={handleSubmit}
+              disabled={createBook.isPending || preview.chapters.length === 0}
               className="px-8 font-medium bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {createBook.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Parsing Outline...
-                </>
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Parsing Outline...</>
               ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" /> Initialize Manuscript
-                </>
+                <><Sparkles className="w-4 h-4 mr-2" /> Initialize Manuscript</>
               )}
             </Button>
           </div>
@@ -108,16 +225,16 @@ export default function NewBook() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <FileDown className="w-5 h-5 text-primary" />
-                Formatting Rules
+                Formatting Guide
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground space-y-4">
-                <p>Ghostwriter expects a specific markdown structure to correctly parse your book:</p>
-                <div className="p-4 bg-background/50 rounded border border-border/50 font-mono text-xs whitespace-pre-wrap">
-                  {INSTRUCTIONS}
+                <p>Use this Markdown structure for best results:</p>
+                <div className="p-4 bg-background/50 rounded border border-border/50 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+                  {EXAMPLE}
                 </div>
-                <p>The metadata fields (Genre, Audience, Logline) are optional but highly recommended for better generation quality.</p>
+                <p className="text-xs opacity-70">Genre, Audience, and Logline are optional but improve AI output quality significantly.</p>
               </div>
             </CardContent>
           </Card>

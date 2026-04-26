@@ -309,7 +309,7 @@ router.get("/books/:id/export/:format", async (req, res) => {
     <dc:language>en</dc:language>
     <dc:creator>AI Ghostwriter</dc:creator>
     <dc:description>${escapeXml(book.logline || "")}</dc:description>
-    <meta property="dcterms:modified">${new Date().toISOString().replace(".", "").split(".")[0]}Z</meta>
+    <meta property="dcterms:modified">${new Date().toISOString().split(".")[0]}Z</meta>
   </metadata>
   <manifest>
     ${manifestItems}

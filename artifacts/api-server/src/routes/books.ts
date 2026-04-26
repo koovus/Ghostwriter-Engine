@@ -256,7 +256,7 @@ If it serves the story, end the chapter on a cliffhanger. This could be a revela
 - Use white space — paragraph breaks are a pacing tool
 
 ### CHAPTER TARGET:
-Write a complete chapter of 600–900 words. This is real prose, not an outline or summary. 
+Write a complete chapter of approximately ${Math.max(600, (chapter.beatsJson as string[]).length * 350)}–${Math.max(900, (chapter.beatsJson as string[]).length * 500)} words. This is real prose, not an outline or summary. Scale naturally: more beats require more pages to honour every story moment.
 
 ${toneBlock}
 
@@ -287,7 +287,7 @@ Write only the chapter prose. No chapter title header. No beat labels. No meta-c
   try {
     const stream = await openai.chat.completions.create({
       model: "gpt-5.4",
-      max_completion_tokens: 2048,
+      max_completion_tokens: Math.min(8192, Math.max(2048, (chapter.beatsJson as string[]).length * 700)),
       messages: [
         { role: "system", content: systemPrompt },
         {
@@ -360,8 +360,14 @@ router.post("/books/:id/tone-samples", async (req, res) => {
 });
 
 router.delete("/books/:id/tone-samples/:sampleId", async (req, res) => {
+  const bookId = parseInt(req.params.id, 10);
   const sampleId = parseInt(req.params.sampleId, 10);
-  await db.delete(toneSamplesTable).where(eq(toneSamplesTable.id, sampleId));
+  await db.delete(toneSamplesTable).where(
+    and(
+      eq(toneSamplesTable.id, sampleId),
+      eq(toneSamplesTable.bookId, bookId)
+    )
+  );
   res.status(204).end();
 });
 
