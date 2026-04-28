@@ -16,7 +16,7 @@ function Layout({ children }: { children: React.ReactNode }) {
       <header className="h-16 border-b border-border/40 flex items-center px-6 sticky top-0 bg-background/95 backdrop-blur z-50">
         <a href="/" className="flex items-center gap-2 text-primary transition-opacity hover:opacity-80">
           <PenTool className="w-5 h-5" />
-          <span className="font-serif font-semibold text-lg tracking-tight">Ghostwriter</span>
+          <span className="font-serif font-semibold text-lg tracking-tight">Writer Ron</span>
         </a>
       </header>
       <main className="flex-1 flex flex-col w-full max-w-[1600px] mx-auto relative">

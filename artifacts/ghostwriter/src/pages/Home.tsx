@@ -66,7 +66,7 @@ export default function Home() {
           </div>
           <h3 className="text-2xl font-serif font-medium mb-2">The desk is empty</h3>
           <p className="text-muted-foreground max-w-md mb-8">
-            Paste a markdown outline to create your first book project. Ghostwriter will help you craft it chapter by chapter.
+            Paste a markdown outline to create your first book project. Writer Ron will help you craft it chapter by chapter.
           </p>
 
           <div className="w-full max-w-xl text-left mb-8">

@@ -155,7 +155,7 @@ export default function NewBook() {
           </Button>
         </Link>
         <h1 className="text-4xl font-serif font-medium tracking-tight mb-3">Initialize Project</h1>
-        <p className="text-muted-foreground text-lg">Paste your structured markdown outline, or upload a .md or .txt file. Ghostwriter parses the title, metadata, and chapter beats automatically.</p>
+        <p className="text-muted-foreground text-lg">Paste your structured markdown outline, or upload a .md or .txt file. Writer Ron parses the title, metadata, and chapter beats automatically.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8">

@@ -585,7 +585,7 @@ export default function BookDetail() {
               <div className="space-y-6">
                 <div className="space-y-3">
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Provide writing samples to train Ghostwriter on your specific prose style, tone, and pacing.
+                    Provide writing samples to train Writer Ron on your specific prose style, tone, and pacing.
                   </p>
                   <div className="space-y-2">
                     <Label htmlFor="label" className="text-xs">Sample Name</Label>
