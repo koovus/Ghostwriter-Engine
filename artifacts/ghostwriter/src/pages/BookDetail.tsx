@@ -61,12 +61,14 @@ export default function BookDetail() {
     }
   }, [activeChapterId, book]);
 
-  // Sync draft beats when active chapter changes
+  // Initialize draft beats only when switching to a different chapter
   useEffect(() => {
     if (activeChapter) {
       setDraftBeats([...(activeChapter.beatsJson as string[])]);
     }
-  }, [activeChapterId, book]);
+    // Intentionally only depends on activeChapterId — book refetches should NOT overwrite unsaved edits
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChapterId]);
 
   const handleGenerate = async (chapter: Chapter) => {
     generate(bookId, chapter.chapterNumber, (_result, fullText) => {
@@ -100,6 +102,7 @@ export default function BookDetail() {
       data: { beatsJson: cleaned }
     }, {
       onSuccess: () => {
+        setDraftBeats(cleaned);
         queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
         toast({ title: "Beats updated" });
       }
