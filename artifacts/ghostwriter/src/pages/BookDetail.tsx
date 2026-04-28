@@ -55,14 +55,18 @@ export default function BookDetail() {
     }
   }, [book, activeChapterId]);
 
-  // Sync edited text and reset beats edit mode when active chapter changes
+  // Sync edited text whenever book data refreshes or active chapter changes
   useEffect(() => {
     if (activeChapter) {
       setEditedText(activeChapter.generatedText || "");
     }
+  }, [activeChapterId, book]);
+
+  // Reset beats edit mode only when the user navigates to a different chapter
+  useEffect(() => {
     setEditingBeats(false);
     setDraftBeats([]);
-  }, [activeChapterId, book]);
+  }, [activeChapterId]);
 
   const handleGenerate = async (chapter: Chapter) => {
     generate(bookId, chapter.chapterNumber, (_result, fullText) => {
