@@ -26,7 +26,7 @@ export default function Home() {
     e.preventDefault();
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this book project? This cannot be undone.")) {
-      deleteBook(bookId);
+      deleteBook({ id: bookId });
     }
   }
 
