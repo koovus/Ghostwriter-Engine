@@ -1,16 +1,34 @@
-import { useListBooks, getListBooksQueryKey } from "@workspace/api-client-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { useListBooks, getListBooksQueryKey, useDeleteBook } from "@workspace/api-client-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookPlus, BookOpen, Clock, FileText } from "lucide-react";
+import { BookPlus, BookOpen, Clock, FileText, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { Progress } from "@/components/ui/progress";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
   const { data: books, isLoading } = useListBooks({
     query: { queryKey: getListBooksQueryKey() }
   });
+
+  const queryClient = useQueryClient();
+  const { mutate: deleteBook } = useDeleteBook({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() });
+      },
+    },
+  });
+
+  function handleDelete(e: React.MouseEvent, bookId: number) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this book project? This cannot be undone.")) {
+      deleteBook(bookId);
+    }
+  }
 
   return (
     <div className="p-8 md:p-12 w-full max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -92,10 +110,19 @@ Beats:
                   <CardHeader>
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-xs font-mono uppercase tracking-wider text-primary/80">{book.genre}</span>
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {format(new Date(book.updatedAt), "MMM d, yyyy")}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {format(new Date(book.updatedAt), "MMM d, yyyy")}
+                        </span>
+                        <button
+                          onClick={(e) => handleDelete(e, book.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-0.5 rounded"
+                          title="Delete project"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                     <CardTitle className="text-2xl font-serif leading-tight group-hover:text-primary transition-colors">
                       {book.title}
