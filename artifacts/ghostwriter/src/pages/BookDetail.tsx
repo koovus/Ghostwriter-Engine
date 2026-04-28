@@ -38,7 +38,6 @@ export default function BookDetail() {
   const [editGenre, setEditGenre] = useState("");
   const [editAudience, setEditAudience] = useState("");
   const [editLogline, setEditLogline] = useState("");
-  const [editingBeats, setEditingBeats] = useState(false);
   const [draftBeats, setDraftBeats] = useState<string[]>([]);
 
   const updateBook = useUpdateBook();
@@ -62,11 +61,12 @@ export default function BookDetail() {
     }
   }, [activeChapterId, book]);
 
-  // Reset beats edit mode only when the user navigates to a different chapter
+  // Sync draft beats when active chapter changes
   useEffect(() => {
-    setEditingBeats(false);
-    setDraftBeats([]);
-  }, [activeChapterId]);
+    if (activeChapter) {
+      setDraftBeats([...(activeChapter.beatsJson as string[])]);
+    }
+  }, [activeChapterId, book]);
 
   const handleGenerate = async (chapter: Chapter) => {
     generate(bookId, chapter.chapterNumber, (_result, fullText) => {
@@ -91,12 +91,6 @@ export default function BookDetail() {
     });
   };
 
-  const startEditBeats = () => {
-    if (!activeChapter) return;
-    setDraftBeats([...(activeChapter.beatsJson as string[])]);
-    setEditingBeats(true);
-  };
-
   const saveBeats = () => {
     if (!activeChapter) return;
     const cleaned = draftBeats.map(b => b.trim()).filter(Boolean);
@@ -107,16 +101,20 @@ export default function BookDetail() {
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
-        setEditingBeats(false);
         toast({ title: "Beats updated" });
       }
     });
   };
 
   const cancelEditBeats = () => {
-    setEditingBeats(false);
-    setDraftBeats([]);
+    if (activeChapter) {
+      setDraftBeats([...(activeChapter.beatsJson as string[])]);
+    }
   };
+
+  const beatsAreDirty = activeChapter
+    ? JSON.stringify(draftBeats) !== JSON.stringify(activeChapter.beatsJson)
+    : false;
 
   const openEditPanel = () => {
     if (!book) return;
@@ -319,17 +317,7 @@ export default function BookDetail() {
                 <div className="mt-6 pt-6 border-t border-border/20">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Narrative Beats</h4>
-                    {!editingBeats ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
-                        onClick={startEditBeats}
-                        disabled={isGenerating}
-                      >
-                        <Pencil className="w-3 h-3 mr-1" /> Edit
-                      </Button>
-                    ) : (
+                    {beatsAreDirty && (
                       <div className="flex gap-1.5">
                         <Button
                           variant="ghost"
@@ -337,7 +325,7 @@ export default function BookDetail() {
                           className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
                           onClick={cancelEditBeats}
                         >
-                          <X className="w-3 h-3 mr-1" /> Cancel
+                          <X className="w-3 h-3 mr-1" /> Discard
                         </Button>
                         <Button
                           size="sm"
@@ -356,68 +344,60 @@ export default function BookDetail() {
                     )}
                   </div>
 
-                  {editingBeats ? (
-                    <div className="space-y-2">
-                      {draftBeats.map((beat, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span className="text-xs text-primary/40 font-mono w-4 shrink-0 text-right">{idx + 1}</span>
-                          <Input
-                            value={beat}
-                            onChange={(e) => {
+                  <div className="space-y-2">
+                    {draftBeats.map((beat, idx) => (
+                      <div key={idx} className="flex items-center gap-2 group/beat">
+                        <span className="text-xs text-primary/40 font-mono w-4 shrink-0 text-right">{idx + 1}</span>
+                        <Input
+                          value={beat}
+                          onChange={(e) => {
+                            const next = [...draftBeats];
+                            next[idx] = e.target.value;
+                            setDraftBeats(next);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
                               const next = [...draftBeats];
-                              next[idx] = e.target.value;
+                              next.splice(idx + 1, 0, "");
                               setDraftBeats(next);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                const next = [...draftBeats];
-                                next.splice(idx + 1, 0, "");
-                                setDraftBeats(next);
-                              } else if (e.key === "Backspace" && beat === "" && draftBeats.length > 1) {
-                                e.preventDefault();
-                                const next = draftBeats.filter((_, i) => i !== idx);
-                                setDraftBeats(next);
-                              }
-                            }}
-                            className="flex-1 h-8 text-sm bg-secondary/30 border-border/40"
-                            placeholder={`Beat ${idx + 1}…`}
-                            autoFocus={idx === draftBeats.length - 1 && beat === ""}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                            onClick={() => {
-                              if (draftBeats.length > 1) {
-                                setDraftBeats(draftBeats.filter((_, i) => i !== idx));
-                              }
-                            }}
-                            disabled={draftBeats.length <= 1}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full border-dashed border-border/40 text-xs text-muted-foreground h-7 mt-1"
-                        onClick={() => setDraftBeats([...draftBeats, ""])}
-                      >
-                        <Plus className="w-3 h-3 mr-1" /> Add Beat
-                      </Button>
-                    </div>
-                  ) : (
-                    <ul className="space-y-2">
-                      {(activeChapter.beatsJson as string[]).map((beat, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-foreground/80">
-                          <ChevronRight className="w-4 h-4 text-primary/50 shrink-0 mt-0.5" />
-                          <span className="leading-relaxed">{beat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                            } else if (e.key === "Backspace" && beat === "" && draftBeats.length > 1) {
+                              e.preventDefault();
+                              const next = draftBeats.filter((_, i) => i !== idx);
+                              setDraftBeats(next);
+                            }
+                          }}
+                          disabled={isGenerating}
+                          className="flex-1 h-8 text-sm bg-secondary/30 border-border/40 focus:border-primary/40"
+                          placeholder={`Beat ${idx + 1}…`}
+                          autoFocus={idx === draftBeats.length - 1 && beat === ""}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 text-muted-foreground/0 group-hover/beat:text-muted-foreground hover:!text-destructive transition-colors"
+                          onClick={() => {
+                            if (draftBeats.length > 1) {
+                              setDraftBeats(draftBeats.filter((_, i) => i !== idx));
+                            }
+                          }}
+                          disabled={draftBeats.length <= 1 || isGenerating}
+                          title="Delete beat"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-dashed border-border/40 text-xs text-muted-foreground h-7 mt-1"
+                      onClick={() => setDraftBeats([...draftBeats, ""])}
+                      disabled={isGenerating}
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Add Beat
+                    </Button>
+                  </div>
                 </div>
               </div>
 
