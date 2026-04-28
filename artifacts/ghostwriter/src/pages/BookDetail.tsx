@@ -407,7 +407,7 @@ export default function BookDetail() {
               {/* Editor/Stream Area */}
               <div className="flex-1 p-8 overflow-y-auto custom-scrollbar relative">
                 {isGenerating ? (
-                  <div className="max-w-3xl mx-auto font-serif text-lg leading-loose text-foreground/90 whitespace-pre-wrap pb-24">
+                  <div className="max-w-3xl mx-auto text-xl leading-relaxed text-foreground/90 whitespace-pre-wrap pb-24">
                     {streamingText}
                     <span className="inline-block w-2 h-5 ml-1 bg-primary animate-pulse align-middle" />
                   </div>
@@ -417,7 +417,7 @@ export default function BookDetail() {
                       value={editedText}
                       onChange={(e) => setEditedText(e.target.value)}
                       onBlur={handleSaveEdit}
-                      className="min-h-[600px] w-full resize-none font-serif text-lg leading-loose bg-transparent border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                      className="min-h-[600px] w-full resize-none text-xl leading-relaxed bg-transparent border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
                       placeholder="Start writing..."
                     />
                     {editedText !== activeChapter.generatedText && (
@@ -430,7 +430,7 @@ export default function BookDetail() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                    <p className="font-serif text-xl italic opacity-50">This chapter is waiting to be written.</p>
+                    <p className="text-xl italic opacity-50">This chapter is waiting to be written.</p>
                   </div>
                 )}
               </div>
@@ -439,7 +439,7 @@ export default function BookDetail() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground">
               <BookOpen className="w-12 h-12 opacity-20" />
-              <p className="font-serif text-lg italic opacity-50">Select a chapter to begin writing.</p>
+              <p className="text-lg italic opacity-40">Select a chapter to begin writing.</p>
             </div>
           )}
 

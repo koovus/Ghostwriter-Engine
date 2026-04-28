@@ -61,67 +61,66 @@
 }
 
 :root {
-  /* Default to dark theme for this literary aesthetic */
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(0,0,0, .08);
+  --badge-outline: rgba(0,0,0, .05);
 
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --opaque-button-border-intensity: -6;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .06);
 
-  /* Deep ink / near-black background */
-  --background: 220 20% 6%;
-  --foreground: 210 20% 88%;
+  /* Clean warm-white background */
+  --background: 48 20% 98%;
+  --foreground: 222 47% 11%;
 
-  /* Subtle borders */
-  --border: 220 15% 15%;
-  --input: 220 15% 15%;
-  --ring: 38 92% 50%;
+  /* Subtle light borders */
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 239 84% 67%;
 
-  /* Cards */
-  --card: 220 18% 10%;
-  --card-foreground: 210 20% 88%;
-  --card-border: 220 15% 15%;
+  /* Cards — pure white, floating */
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 214 32% 91%;
 
   /* Popovers */
-  --popover: 220 18% 10%;
-  --popover-foreground: 210 20% 88%;
-  --popover-border: 220 15% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 214 32% 91%;
 
-  /* Primary: Amber/Gold */
-  --primary: 38 92% 50%;
-  --primary-foreground: 220 20% 6%;
-  
-  /* Secondary: Muted dark grey */
-  --secondary: 220 15% 15%;
-  --secondary-foreground: 210 20% 88%;
+  /* Primary: Indigo */
+  --primary: 239 84% 67%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary: Very light gray */
+  --secondary: 210 20% 96%;
+  --secondary-foreground: 222 47% 11%;
 
   /* Muted */
-  --muted: 220 15% 15%;
-  --muted-foreground: 215 15% 65%;
+  --muted: 210 20% 96%;
+  --muted-foreground: 215 16% 47%;
 
-  /* Accent */
-  --accent: 38 92% 50%;
-  --accent-foreground: 220 20% 6%;
+  /* Accent: Indigo tint */
+  --accent: 239 84% 67%;
+  --accent-foreground: 0 0% 100%;
 
   /* Destructive */
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 210 20% 88%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
 
   /* Sidebar */
-  --sidebar: 220 20% 4%;
-  --sidebar-foreground: 210 20% 88%;
-  --sidebar-border: 220 15% 15%;
-  --sidebar-primary: 38 92% 50%;
-  --sidebar-primary-foreground: 220 20% 6%;
-  --sidebar-accent: 220 15% 15%;
-  --sidebar-accent-foreground: 210 20% 88%;
-  --sidebar-ring: 38 92% 50%;
+  --sidebar: 48 20% 98%;
+  --sidebar-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 91%;
+  --sidebar-primary: 239 84% 67%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 20% 96%;
+  --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-ring: 239 84% 67%;
 
   --app-font-sans: 'Inter', system-ui, sans-serif;
-  --app-font-serif: 'Playfair Display', Georgia, serif;
+  --app-font-serif: 'Georgia', serif;
   --app-font-mono: 'JetBrains Mono', Menlo, monospace;
-  --radius: 0.3rem;
+  --radius: 0.625rem;
 
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
@@ -133,7 +132,40 @@
 }
 
 .dark {
-  /* Inherit all variables from root since root is already dark mode */
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+  --background: 220 20% 6%;
+  --foreground: 210 20% 88%;
+  --border: 220 15% 15%;
+  --input: 220 15% 15%;
+  --ring: 239 84% 67%;
+  --card: 220 18% 10%;
+  --card-foreground: 210 20% 88%;
+  --card-border: 220 15% 15%;
+  --popover: 220 18% 10%;
+  --popover-foreground: 210 20% 88%;
+  --popover-border: 220 15% 15%;
+  --primary: 239 84% 67%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 15% 15%;
+  --secondary-foreground: 210 20% 88%;
+  --muted: 220 15% 15%;
+  --muted-foreground: 215 15% 65%;
+  --accent: 239 84% 67%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 210 20% 88%;
+  --sidebar: 220 20% 4%;
+  --sidebar-foreground: 210 20% 88%;
+  --sidebar-border: 220 15% 15%;
+  --sidebar-primary: 239 84% 67%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 15% 15%;
+  --sidebar-accent-foreground: 210 20% 88%;
+  --sidebar-ring: 239 84% 67%;
 }
 
 @layer base {
