@@ -177,7 +177,7 @@ router.put("/books/:id/chapters/:chapterNumber", async (req, res) => {
     patch.wordCount = countWords(generatedText);
   }
   if (beatsJson !== undefined) {
-    patch.beats = beatsJson;
+    patch.beatsJson = beatsJson;
   }
 
   const [updated] = await db
