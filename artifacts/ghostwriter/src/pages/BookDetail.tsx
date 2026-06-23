@@ -39,6 +39,7 @@ export default function BookDetail() {
   const [editAudience, setEditAudience] = useState("");
   const [editLogline, setEditLogline] = useState("");
   const [draftBeats, setDraftBeats] = useState<string[]>([]);
+  const [draftTargetWordCount, setDraftTargetWordCount] = useState<string>("");
 
   const updateBook = useUpdateBook();
 
@@ -65,10 +66,32 @@ export default function BookDetail() {
   useEffect(() => {
     if (activeChapter) {
       setDraftBeats([...(activeChapter.beatsJson as string[])]);
+      setDraftTargetWordCount(
+        activeChapter.targetWordCount ? String(activeChapter.targetWordCount) : ""
+      );
     }
     // Intentionally only depends on activeChapterId — book refetches should NOT overwrite unsaved edits
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeChapterId]);
+
+  const handleTargetWordCountBlur = () => {
+    if (!activeChapter) return;
+    const parsed = draftTargetWordCount.trim() === "" ? null : parseInt(draftTargetWordCount.replace(/,/g, ""), 10);
+    if (parsed !== undefined && (parsed === null || (!isNaN(parsed) && parsed > 0))) {
+      const current = activeChapter.targetWordCount ?? null;
+      if (parsed !== current) {
+        updateChapter.mutate({
+          id: bookId,
+          chapterNumber: activeChapter.chapterNumber,
+          data: { targetWordCount: parsed }
+        }, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
+          }
+        });
+      }
+    }
+  };
 
   const handleGenerate = async (chapter: Chapter) => {
     const beatCount = (chapter.beatsJson as string[])?.length ?? 0;
@@ -324,7 +347,24 @@ export default function BookDetail() {
                 {/* Beats */}
                 <div className="mt-6 pt-6 border-t border-border/20">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Narrative Beats</h4>
+                    <div className="flex items-center gap-4">
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Narrative Beats</h4>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">Target:</span>
+                        <div className="relative flex items-center">
+                          <Input
+                            value={draftTargetWordCount}
+                            onChange={(e) => setDraftTargetWordCount(e.target.value.replace(/[^0-9,]/g, ""))}
+                            onBlur={handleTargetWordCountBlur}
+                            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                            disabled={isGenerating}
+                            placeholder="auto"
+                            className="h-6 w-24 text-xs bg-secondary/30 border-border/40 focus:border-primary/40 pr-8 text-center"
+                          />
+                          <span className="absolute right-2 text-xs text-muted-foreground pointer-events-none">w</span>
+                        </div>
+                      </div>
+                    </div>
                     {beatsAreDirty && (
                       <div className="flex gap-1.5">
                         <Button

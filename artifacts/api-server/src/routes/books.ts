@@ -170,7 +170,7 @@ router.put("/books/:id/chapters/:chapterNumber", async (req, res) => {
     return;
   }
 
-  const { generatedText, beatsJson } = parse.data;
+  const { generatedText, beatsJson, targetWordCount } = parse.data;
 
   const patch: Record<string, unknown> = { updatedAt: new Date() };
   if (generatedText !== undefined) {
@@ -179,6 +179,9 @@ router.put("/books/:id/chapters/:chapterNumber", async (req, res) => {
   }
   if (beatsJson !== undefined) {
     patch.beatsJson = beatsJson;
+  }
+  if (targetWordCount !== undefined) {
+    patch.targetWordCount = targetWordCount;
   }
 
   const [updated] = await db
@@ -276,8 +279,19 @@ ${sampleText}
     .map((b, i) => `  Beat ${i + 1}: ${b}`)
     .join("\n");
 
-  const targetWordMin = hasBeats ? Math.max(600, beats.length * 350) : 600;
-  const targetWordMax = hasBeats ? Math.max(900, beats.length * 500) : 900;
+  let targetWordMin: number;
+  let targetWordMax: number;
+  if (chapter.targetWordCount && chapter.targetWordCount > 0) {
+    const margin = Math.round(chapter.targetWordCount * 0.1);
+    targetWordMin = chapter.targetWordCount - margin;
+    targetWordMax = chapter.targetWordCount + margin;
+  } else if (hasBeats) {
+    targetWordMin = Math.max(600, beats.length * 350);
+    targetWordMax = Math.max(900, beats.length * 500);
+  } else {
+    targetWordMin = 600;
+    targetWordMax = 900;
+  }
 
   const chapterContentBlock = hasBeats
     ? `## THIS CHAPTER

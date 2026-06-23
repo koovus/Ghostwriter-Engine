@@ -465,6 +465,10 @@ components:
           nullable: true
         wordCount:
           type: integer
+        targetWordCount:
+          type: integer
+          nullable: true
+          description: Author-set target word count for this chapter
         openerTechnique:
           type: string
           nullable: true
@@ -483,6 +487,7 @@ components:
         - beatsJson
         - generatedText
         - wordCount
+        - targetWordCount
         - openerTechnique
         - createdAt
         - updatedAt
@@ -545,8 +550,14 @@ components:
       properties:
         generatedText:
           type: string
-      required:
-        - generatedText
+        beatsJson:
+          type: array
+          items:
+            type: string
+        targetWordCount:
+          type: integer
+          nullable: true
+          description: Author-set target word count for this chapter (overrides auto-calculated range)
 
     ToneSample:
       type: object

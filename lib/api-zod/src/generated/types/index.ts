@@ -16,4 +16,5 @@ export * from "./createToneSampleBody";
 export * from "./errorResponse";
 export * from "./healthStatus";
 export * from "./toneSample";
+export * from "./updateBookBody";
 export * from "./updateChapterBody";

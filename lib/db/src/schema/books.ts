@@ -32,6 +32,7 @@ export const chaptersTable = pgTable("chapters", {
   beatsJson: json("beats_json").$type<string[]>().notNull().default([]),
   generatedText: text("generated_text"),
   wordCount: integer("word_count").notNull().default(0),
+  targetWordCount: integer("target_word_count"),
   openerTechnique: text("opener_technique"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

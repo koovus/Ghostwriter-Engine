@@ -10,11 +10,15 @@ export interface Chapter {
   id: number;
   bookId: number;
   chapterNumber: number;
+  /** Optional display label from the outline (e.g. "1.1") */
+  chapterLabel?: string | null;
   title: string;
   description: string;
   beatsJson: string[];
   generatedText: string | null;
   wordCount: number;
+  /** Author-set target word count for this chapter */
+  targetWordCount: number | null;
   openerTechnique: string | null;
   createdAt: Date;
   updatedAt: Date;

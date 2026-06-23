@@ -7,5 +7,8 @@
  */
 
 export interface UpdateChapterBody {
-  generatedText: string;
+  generatedText?: string;
+  beatsJson?: string[];
+  /** Author-set target word count for this chapter (overrides auto-calculated range) */
+  targetWordCount?: number | null;
 }

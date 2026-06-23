@@ -57,11 +57,19 @@ export const GetBookResponse = zod.object({
       id: zod.number(),
       bookId: zod.number(),
       chapterNumber: zod.number(),
+      chapterLabel: zod
+        .string()
+        .nullish()
+        .describe('Optional display label from the outline (e.g. \"1.1\")'),
       title: zod.string(),
       description: zod.string(),
       beatsJson: zod.array(zod.string()),
       generatedText: zod.string().nullable(),
       wordCount: zod.number(),
+      targetWordCount: zod
+        .number()
+        .nullable()
+        .describe("Author-set target word count for this chapter"),
       openerTechnique: zod.string().nullable(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
@@ -123,17 +131,31 @@ export const UpdateChapterParams = zod.object({
 export const UpdateChapterBody = zod.object({
   generatedText: zod.string().optional(),
   beatsJson: zod.array(zod.string()).optional(),
+  targetWordCount: zod
+    .number()
+    .nullish()
+    .describe(
+      "Author-set target word count for this chapter (overrides auto-calculated range)",
+    ),
 });
 
 export const UpdateChapterResponse = zod.object({
   id: zod.number(),
   bookId: zod.number(),
   chapterNumber: zod.number(),
+  chapterLabel: zod
+    .string()
+    .nullish()
+    .describe('Optional display label from the outline (e.g. \"1.1\")'),
   title: zod.string(),
   description: zod.string(),
   beatsJson: zod.array(zod.string()),
   generatedText: zod.string().nullable(),
   wordCount: zod.number(),
+  targetWordCount: zod
+    .number()
+    .nullable()
+    .describe("Author-set target word count for this chapter"),
   openerTechnique: zod.string().nullable(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),

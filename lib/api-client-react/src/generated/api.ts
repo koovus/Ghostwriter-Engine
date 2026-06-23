@@ -347,90 +347,6 @@ export function useGetBook<
 }
 
 /**
- * @summary Delete a book
- */
-export const getDeleteBookUrl = (id: number) => {
-  return `/api/books/${id}`;
-};
-
-export const deleteBook = async (
-  id: number,
-  options?: RequestInit,
-): Promise<void> => {
-  return customFetch<void>(getDeleteBookUrl(id), {
-    ...options,
-    method: "DELETE",
-  });
-};
-
-export const getDeleteBookMutationOptions = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteBook>>,
-    TError,
-    { id: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteBook>>,
-  TError,
-  { id: number },
-  TContext
-> => {
-  const mutationKey = ["deleteBook"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteBook>>,
-    { id: number }
-  > = (props) => {
-    const { id } = props ?? {};
-
-    return deleteBook(id, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type DeleteBookMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteBook>>
->;
-
-export type DeleteBookMutationError = ErrorType<unknown>;
-
-/**
- * @summary Delete a book
- */
-export const useDeleteBook = <
-  TError = ErrorType<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteBook>>,
-    TError,
-    { id: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof deleteBook>>,
-  TError,
-  { id: number },
-  TContext
-> => {
-  return useMutation(getDeleteBookMutationOptions(options));
-};
-
-/**
  * @summary Update book metadata (title, genre, audience, logline)
  */
 export const getUpdateBookUrl = (id: number) => {
@@ -515,6 +431,90 @@ export const useUpdateBook = <
   TContext
 > => {
   return useMutation(getUpdateBookMutationOptions(options));
+};
+
+/**
+ * @summary Delete a book
+ */
+export const getDeleteBookUrl = (id: number) => {
+  return `/api/books/${id}`;
+};
+
+export const deleteBook = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteBookUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteBookMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBook>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteBook>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteBook"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteBook>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteBook(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteBookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteBook>>
+>;
+
+export type DeleteBookMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a book
+ */
+export const useDeleteBook = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBook>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteBook>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteBookMutationOptions(options));
 };
 
 /**
