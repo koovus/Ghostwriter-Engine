@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Play, Circle, CheckCircle2, ChevronRight, ChevronLeft, Settings2, Download, Trash2, X, RefreshCw, BookOpen, Pencil, Plus, Check } from "lucide-react";
+import { Loader2, Play, Circle, CheckCircle2, ChevronRight, ChevronLeft, Settings2, Download, Trash2, X, RefreshCw, BookOpen, Pencil, Plus, Check, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { BookWithChapters } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -379,6 +379,38 @@ export default function BookDetail() {
                           placeholder={`Beat ${idx + 1}…`}
                           autoFocus={idx === draftBeats.length - 1 && beat === ""}
                         />
+                        <div className="flex flex-col gap-0.5 opacity-0 group-hover/beat:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-3.5 w-6 text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              if (idx === 0) return;
+                              const next = [...draftBeats];
+                              [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+                              setDraftBeats(next);
+                            }}
+                            disabled={idx === 0 || isGenerating}
+                            title="Move up"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-3.5 w-6 text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              if (idx === draftBeats.length - 1) return;
+                              const next = [...draftBeats];
+                              [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+                              setDraftBeats(next);
+                            }}
+                            disabled={idx === draftBeats.length - 1 || isGenerating}
+                            title="Move down"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </Button>
+                        </div>
                         <Button
                           variant="ghost"
                           size="icon"
