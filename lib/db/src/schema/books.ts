@@ -26,6 +26,7 @@ export const chaptersTable = pgTable("chapters", {
     .notNull()
     .references(() => booksTable.id, { onDelete: "cascade" }),
   chapterNumber: integer("chapter_number").notNull(),
+  chapterLabel: text("chapter_label"),
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
   beatsJson: json("beats_json").$type<string[]>().notNull().default([]),

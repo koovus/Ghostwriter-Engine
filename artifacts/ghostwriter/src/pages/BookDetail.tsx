@@ -247,11 +247,15 @@ export default function BookDetail() {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">
-                        Chapter {chapter.chapterNumber}
+                        {chapter.chapterLabel
+                          ? `${chapter.chapterLabel} — ${chapter.title}`
+                          : chapter.title}
                       </div>
-                      <div className={`text-xs truncate ${isActive ? "text-primary/70" : "text-muted-foreground"}`}>
-                        {chapter.title}
-                      </div>
+                      {!chapter.chapterLabel && (
+                        <div className={`text-xs truncate ${isActive ? "text-primary/70" : "text-muted-foreground"}`}>
+                          Chapter {chapter.chapterNumber}
+                        </div>
+                      )}
                     </div>
                   </button>
                 );

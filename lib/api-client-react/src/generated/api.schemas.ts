@@ -45,6 +45,8 @@ export interface Chapter {
   id: number;
   bookId: number;
   chapterNumber: number;
+  /** Optional display label from the outline (e.g. "1.1") */
+  chapterLabel: string | null;
   title: string;
   description: string;
   beatsJson: string[];

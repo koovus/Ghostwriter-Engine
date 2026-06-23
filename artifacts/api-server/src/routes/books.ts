@@ -75,6 +75,7 @@ router.post("/books", async (req, res) => {
       parsed.chapters.map((ch) => ({
         bookId: book.id,
         chapterNumber: ch.chapterNumber,
+        chapterLabel: ch.label ?? null,
         title: ch.title,
         description: ch.description,
         beatsJson: ch.beats,

@@ -448,6 +448,10 @@ components:
           type: integer
         chapterNumber:
           type: integer
+        chapterLabel:
+          type: string
+          nullable: true
+          description: Optional display label from the outline (e.g. "1.1")
         title:
           type: string
         description:

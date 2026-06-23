@@ -1,5 +1,6 @@
 export interface ParsedChapter {
   chapterNumber: number;
+  label?: string;
   title: string;
   description: string;
   beats: string[];
@@ -153,13 +154,14 @@ export function parseOutline(markdown: string): ParsedOutline {
       }
 
       // #### N.M — Sub-chapter title → actual chapter
-      const h4Match = t.match(/^####\s+[\d.]+\s*[–—\-]+\s*(.+)$/);
+      const h4Match = t.match(/^####\s+([\d.]+)\s*[–—\-]+\s*(.+)$/);
       if (h4Match) {
         pushCurrent(currentChapter);
         autoChapterNum++;
         currentChapter = {
           chapterNumber: autoChapterNum,
-          title: h4Match[1].trim(),
+          label: h4Match[1].trim(),
+          title: h4Match[2].trim(),
           description: "",
           beats: [],
         };
