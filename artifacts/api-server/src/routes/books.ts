@@ -243,7 +243,7 @@ router.post("/books/:id/chapters/:chapterNumber/generate", async (req, res) => {
     "ATMOSPHERIC DREAD OPENER: Something feels wrong before anything goes wrong. Build unease through environment, sensation, and suppressed knowledge.",
   ];
 
-  const techniqueIndex = (chapter.chapterNumber - 1) % openerTechniques.length;
+  const techniqueIndex = chapter.chapterNumber % openerTechniques.length;
   const selectedTechnique = openerTechniques[techniqueIndex];
   const techniqueName = selectedTechnique.split(":")[0];
 
