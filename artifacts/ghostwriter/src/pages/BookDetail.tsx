@@ -42,7 +42,7 @@ export default function BookDetail() {
 
   const updateBook = useUpdateBook();
 
-  const { generate, isGenerating, streamingText, cancel } = useChapterGeneration();
+  const { generate, isGenerating, streamingText, cancel, beatsCompleted, activeBeatCount } = useChapterGeneration();
   const updateChapter = useUpdateChapter();
 
   const activeChapter = book?.chapters?.find(c => c.id === activeChapterId);
@@ -71,7 +71,8 @@ export default function BookDetail() {
   }, [activeChapterId]);
 
   const handleGenerate = async (chapter: Chapter) => {
-    generate(bookId, chapter.chapterNumber, (_result, fullText) => {
+    const beatCount = (chapter.beatsJson as string[])?.length ?? 0;
+    generate(bookId, chapter.chapterNumber, beatCount, (_result, fullText) => {
       // Server already persisted generated text; just refresh the cache and sync local state
       setEditedText(fullText);
       queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(bookId) });
@@ -443,9 +444,51 @@ export default function BookDetail() {
               {/* Editor/Stream Area */}
               <div className="flex-1 p-8 overflow-y-auto custom-scrollbar relative">
                 {isGenerating ? (
-                  <div className="max-w-3xl mx-auto text-xl leading-relaxed text-foreground/90 whitespace-pre-wrap pb-24">
-                    {streamingText}
-                    <span className="inline-block w-2 h-5 ml-1 bg-primary animate-pulse align-middle" />
+                  <div className="max-w-3xl mx-auto pb-24">
+                    {activeBeatCount > 0 && (
+                      <div className="mb-6 p-4 rounded-lg border border-border/30 bg-secondary/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary/70" />
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+                            Writing beats
+                          </span>
+                          <span className="ml-auto text-xs font-mono text-muted-foreground">
+                            {Math.min(beatsCompleted, activeBeatCount)} / {activeBeatCount}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from({ length: activeBeatCount }).map((_, i) => {
+                            const isDone = i < beatsCompleted;
+                            const isActive = i === beatsCompleted;
+                            return (
+                              <div
+                                key={i}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono transition-all duration-500 ${
+                                  isDone
+                                    ? "bg-primary/15 text-primary border border-primary/30"
+                                    : isActive
+                                    ? "bg-secondary border border-border/60 text-foreground animate-pulse"
+                                    : "bg-secondary/40 border border-border/20 text-muted-foreground/50"
+                                }`}
+                              >
+                                {isDone ? (
+                                  <CheckCircle2 className="w-3 h-3 shrink-0" />
+                                ) : isActive ? (
+                                  <Loader2 className="w-3 h-3 shrink-0 animate-spin" />
+                                ) : (
+                                  <Circle className="w-3 h-3 shrink-0" />
+                                )}
+                                Beat {i + 1}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    <div className="text-xl leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                      {streamingText}
+                      <span className="inline-block w-2 h-5 ml-1 bg-primary animate-pulse align-middle" />
+                    </div>
                   </div>
                 ) : activeChapter.generatedText ? (
                   <div className="max-w-3xl mx-auto pb-24 relative">
