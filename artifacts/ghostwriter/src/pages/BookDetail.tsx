@@ -297,7 +297,7 @@ export default function BookDetail() {
               <div className="px-8 py-6 border-b border-border/20 shrink-0">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h1 className="text-3xl font-serif mb-2">Chapter {activeChapter.chapterNumber}: {activeChapter.title}</h1>
+                    <h1 className="text-3xl font-serif mb-2">Chapter {activeChapter.chapterLabel ?? activeChapter.chapterNumber}: {activeChapter.title}</h1>
                     {activeChapter.wordCount > 0 && (
                       <div className="text-sm font-mono text-muted-foreground">
                         {activeChapter.wordCount.toLocaleString()} words
@@ -311,7 +311,7 @@ export default function BookDetail() {
                       className="border-border/50 h-9 w-9"
                       disabled={!prevChapter || isGenerating}
                       onClick={() => prevChapter && setActiveChapterId(prevChapter.id)}
-                      title={prevChapter ? `Chapter ${prevChapter.chapterNumber}: ${prevChapter.title}` : "No previous chapter"}
+                      title={prevChapter ? `Chapter ${prevChapter.chapterLabel ?? prevChapter.chapterNumber}: ${prevChapter.title}` : "No previous chapter"}
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
@@ -321,7 +321,7 @@ export default function BookDetail() {
                       className="border-border/50 h-9 w-9"
                       disabled={!nextChapter || isGenerating}
                       onClick={() => nextChapter && setActiveChapterId(nextChapter.id)}
-                      title={nextChapter ? `Chapter ${nextChapter.chapterNumber}: ${nextChapter.title}` : "No next chapter"}
+                      title={nextChapter ? `Chapter ${nextChapter.chapterLabel ?? nextChapter.chapterNumber}: ${nextChapter.title}` : "No next chapter"}
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>
