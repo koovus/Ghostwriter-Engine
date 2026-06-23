@@ -10,7 +10,7 @@ import { FileDown, Sparkles, Loader2, ArrowLeft, Upload, FileText, ChevronRight 
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
-const EXAMPLE = `# The Midnight Library
+const EXAMPLE_FLAT = `# The Midnight Library
 Genre: Fantasy
 Audience: Young Adult
 Logline: Every book in this library contains a life Nora could have lived.
@@ -25,6 +25,31 @@ Logline: Every book in this library contains a life Nora could have lived.
 - She discovers what success without passion feels like
 - Cliffhanger: she hears her name called from another shelf`;
 
+const EXAMPLE_STRUCTURED = `# My Book Title
+**Genre:** Science & Nature
+**Target Audience:** Non-technical founders
+
+## INTRODUCTION
+
+### Opening Hook
+One sentence that grabs the reader.
+
+### Core Premise
+The central argument of the book.
+
+---
+## CHAPTER 1: Chapter Title
+
+### Sub-Chapters
+
+#### 1.1 — Sub-chapter Name
+
+**Key Points:**
+First key point,Second key point,Third key point
+
+**Supporting Examples/Evidence:**
+A short description of the evidence.`;
+
 interface DetectedChapter {
   number: number;
   title: string;
@@ -37,22 +62,60 @@ function parsePreview(md: string): { title: string; chapters: DetectedChapter[] 
   const chapters: DetectedChapter[] = [];
   let currentChapter: DetectedChapter | null = null;
 
+  const isStructured = lines.some(l => /^####\s+[\d.]+\s*[–—\-]/.test(l.trim()));
+  let chapterNum = 0;
+  let awaitingKeyPoints = false;
+
   for (const raw of lines) {
     const t = raw.trim();
+
     if (t.startsWith("# ") && !title) {
       title = t.slice(2).trim();
       continue;
     }
-    const h2 = t.match(/^##\s+(?:Chapter\s+)?(\d+)[:\s–-]+(.+)$/i);
-    const h3 = t.match(/^###\s+(?:Chapter\s+)?(\d+)[:\s–-]+(.+)$/i);
-    const match = h2 || h3;
-    if (match) {
-      if (currentChapter) chapters.push(currentChapter);
-      currentChapter = { number: parseInt(match[1], 10), title: match[2].trim(), beats: 0 };
-      continue;
-    }
-    if (currentChapter && (t.startsWith("- ") || t.startsWith("* ") || t.match(/^\*\*Beat/i))) {
-      currentChapter.beats++;
+
+    if (isStructured) {
+      if (t.match(/^##\s+INTRODUCTION$/i)) {
+        if (currentChapter) chapters.push(currentChapter);
+        currentChapter = { number: 0, title: "Introduction", beats: 0 };
+        awaitingKeyPoints = false;
+        continue;
+      }
+      if (t.match(/^##\s+CHAPTER\s+\d+/i)) continue;
+      if (t.match(/^###\s+Sub-Chapters?$/i)) continue;
+
+      const h4Match = t.match(/^####\s+[\d.]+\s*[–—\-]+\s*(.+)$/);
+      if (h4Match) {
+        if (currentChapter) chapters.push(currentChapter);
+        chapterNum++;
+        currentChapter = { number: chapterNum, title: h4Match[1].trim(), beats: 0 };
+        awaitingKeyPoints = false;
+        continue;
+      }
+      if (currentChapter && t.match(/^\*\*Key Points:\*\*\s*$/i)) {
+        awaitingKeyPoints = true;
+        continue;
+      }
+      if (awaitingKeyPoints && currentChapter && t && !t.startsWith("#") && !t.startsWith("**") && !t.startsWith("*Target:")) {
+        currentChapter.beats += t.split(/,(?=[A-Z])/).filter(p => p.trim().length > 0).length;
+        awaitingKeyPoints = false;
+        continue;
+      }
+      if (t.startsWith("**") && awaitingKeyPoints) {
+        awaitingKeyPoints = false;
+      }
+    } else {
+      const h2 = t.match(/^##\s+(?:Chapter\s+)?(\d+)[:\s–-]+(.+)$/i);
+      const h3 = t.match(/^###\s+(?:Chapter\s+)?(\d+)[:\s–-]+(.+)$/i);
+      const match = h2 || h3;
+      if (match) {
+        if (currentChapter) chapters.push(currentChapter);
+        currentChapter = { number: parseInt(match[1], 10), title: match[2].trim(), beats: 0 };
+        continue;
+      }
+      if (currentChapter && (t.startsWith("- ") || t.startsWith("* ") || t.match(/^\*\*Beat/i))) {
+        currentChapter.beats++;
+      }
     }
   }
   if (currentChapter) chapters.push(currentChapter);
@@ -120,7 +183,7 @@ export default function NewBook() {
       return;
     }
     if (preview.chapters.length === 0) {
-      toast({ title: "No chapters detected", description: "Use ## Chapter 1: Title format for each chapter.", variant: "destructive" });
+      toast({ title: "No chapters detected", description: "Use ## Chapter 1: Title or the structured #### 1.1 — Sub-chapter format.", variant: "destructive" });
       return;
     }
 
@@ -215,10 +278,12 @@ export default function NewBook() {
               <CardContent>
                 <ul className="space-y-1.5" data-testid="chapter-list-preview">
                   {preview.chapters.map((ch) => (
-                    <li key={ch.number} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <li key={`${ch.number}-${ch.title}`} className="flex items-center gap-2 text-sm text-muted-foreground">
                       <ChevronRight className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
                       <span>
-                        <span className="text-foreground font-medium">Chapter {ch.number}: {ch.title}</span>
+                        <span className="text-foreground font-medium">
+                          {ch.number === 0 ? ch.title : `Chapter ${ch.number}: ${ch.title}`}
+                        </span>
                         {ch.beats > 0 && <span className="ml-2 text-xs opacity-60">{ch.beats} beat{ch.beats !== 1 ? "s" : ""}</span>}
                       </span>
                     </li>
@@ -272,11 +337,15 @@ export default function NewBook() {
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground space-y-4">
-                <p>Use this Markdown structure for best results:</p>
+                <p className="font-medium text-foreground">Flat format</p>
                 <div className="p-4 bg-background/50 rounded border border-border/50 font-mono text-xs whitespace-pre-wrap leading-relaxed">
-                  {EXAMPLE}
+                  {EXAMPLE_FLAT}
                 </div>
-                <p className="text-xs opacity-70">Genre, Audience, and Logline are optional but improve AI output quality significantly.</p>
+                <p className="font-medium text-foreground">Structured sub-chapter format</p>
+                <div className="p-4 bg-background/50 rounded border border-border/50 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+                  {EXAMPLE_STRUCTURED}
+                </div>
+                <p className="text-xs opacity-70">Both formats are supported. Genre, Audience, and Logline are optional but improve AI output quality.</p>
               </div>
             </CardContent>
           </Card>
