@@ -79,6 +79,7 @@ router.post("/books", async (req, res) => {
         title: ch.title,
         description: ch.description,
         beatsJson: ch.beats,
+        ...(ch.targetWordCount ? { targetWordCount: ch.targetWordCount } : {}),
       }))
     );
   }

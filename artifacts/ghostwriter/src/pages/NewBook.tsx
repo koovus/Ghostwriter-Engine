@@ -276,7 +276,7 @@ export default function NewBook() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-1.5" data-testid="chapter-list-preview">
+                <ul className="space-y-1.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar" data-testid="chapter-list-preview">
                   {preview.chapters.map((ch) => (
                     <li key={`${ch.number}-${ch.title}`} className="flex items-center gap-2 text-sm text-muted-foreground">
                       <ChevronRight className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />

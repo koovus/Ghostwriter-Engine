@@ -244,8 +244,9 @@ export default function BookDetail() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-72 border-r border-border/40 flex flex-col bg-secondary/10 shrink-0">
-          <div className="p-4 border-b border-border/40">
+          <div className="p-4 border-b border-border/40 flex items-center justify-between">
             <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Chapters</h3>
+            <span className="text-xs text-muted-foreground/60 font-mono">{chapters.length}</span>
           </div>
           <ScrollArea className="flex-1">
             <div className="p-3 space-y-1">

@@ -4,6 +4,7 @@ export interface ParsedChapter {
   title: string;
   description: string;
   beats: string[];
+  targetWordCount?: number;
 }
 
 export interface ParsedOutline {
@@ -205,6 +206,14 @@ export function parseOutline(markdown: string): ParsedOutline {
         if (awaitingEvidence && t && !t.startsWith("#") && !t.startsWith("*Target:") && !t.startsWith("**") && !currentChapter.description) {
           currentChapter.description = t.replace(/\*\*/g, "").trim();
           awaitingEvidence = false;
+          continue;
+        }
+
+        // *Target: N,XXX words* — sub-chapter target word count
+        const targetMatch = t.match(/^\*Target:\s*([\d,]+)\s*words?\*$/i);
+        if (targetMatch) {
+          const wc = parseInt(targetMatch[1].replace(/,/g, ""), 10);
+          if (!isNaN(wc)) currentChapter.targetWordCount = wc;
           continue;
         }
       }
