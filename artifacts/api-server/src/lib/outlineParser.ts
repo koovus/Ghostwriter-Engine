@@ -191,11 +191,9 @@ export function parseOutline(markdown: string): ParsedOutline {
           awaitingEvidence = false;
         }
 
-        // Collect Key Points: next non-empty, non-heading line.
-        // Key points are separated by a comma directly followed by an uppercase letter
-        // (e.g. "First point,Second point") while internal commas have a space after them.
+        // Collect Key Points: next non-empty, non-heading line, split by comma.
         if (awaitingKeyPoints && t && !t.startsWith("#") && !t.startsWith("*Target:") && !t.startsWith("**")) {
-          const points = t.split(/,(?=[A-Z])/).map(p => p.trim()).filter(p => p.length > 0);
+          const points = t.split(",").map(p => p.trim()).filter(p => p.length > 0);
           currentChapter.beats.push(...points);
           awaitingKeyPoints = false;
           continue;

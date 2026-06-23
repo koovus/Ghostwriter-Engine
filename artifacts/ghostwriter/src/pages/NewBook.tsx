@@ -97,7 +97,7 @@ function parsePreview(md: string): { title: string; chapters: DetectedChapter[] 
         continue;
       }
       if (awaitingKeyPoints && currentChapter && t && !t.startsWith("#") && !t.startsWith("**") && !t.startsWith("*Target:")) {
-        currentChapter.beats += t.split(/,(?=[A-Z])/).filter(p => p.trim().length > 0).length;
+        currentChapter.beats += t.split(",").filter(p => p.trim().length > 0).length;
         awaitingKeyPoints = false;
         continue;
       }
