@@ -268,9 +268,30 @@ ${sampleText}
 `;
   }
 
-  const beatsText = (chapter.beatsJson as string[])
+  const beats = (chapter.beatsJson as string[] | null) ?? [];
+  const hasBeats = beats.length > 0;
+
+  const beatsText = beats
     .map((b, i) => `  Beat ${i + 1}: ${b}`)
     .join("\n");
+
+  const targetWordMin = hasBeats ? Math.max(600, beats.length * 350) : 600;
+  const targetWordMax = hasBeats ? Math.max(900, beats.length * 500) : 900;
+
+  const chapterContentBlock = hasBeats
+    ? `## THIS CHAPTER
+${chapter.title}
+
+Chapter description: ${chapter.description || ""}
+
+## BEATS TO HIT (in order — these are the plot/character beats you must deliver):
+${beatsText}`
+    : `## THIS CHAPTER
+${chapter.title}
+
+Chapter description: ${chapter.description || ""}
+
+Write the chapter based on the title and description above. Follow the craft rules and opener technique.`;
 
   const systemPrompt = `You are a master ghostwriter specializing in ${book.genre || "science fiction"} novels. You write prose that makes readers feel something on every page.
 
@@ -295,7 +316,7 @@ If it serves the story, end the chapter on a cliffhanger. This could be a revela
 - Use white space — paragraph breaks are a pacing tool
 
 ### CHAPTER TARGET:
-Write a complete chapter of approximately ${Math.max(600, (chapter.beatsJson as string[]).length * 350)}–${Math.max(900, (chapter.beatsJson as string[]).length * 500)} words. This is real prose, not an outline or summary. Scale naturally: more beats require more pages to honour every story moment.
+Write a complete chapter of approximately ${targetWordMin}–${targetWordMax} words. This is real prose, not an outline or summary.${hasBeats ? " Scale naturally: more beats require more pages to honour every story moment." : ""}
 
 ${toneBlock}
 
@@ -305,13 +326,7 @@ Genre: ${book.genre || "Science Fiction"}
 Audience: ${book.audience || "General adult readers"}
 Logline: ${book.logline || ""}
 
-## THIS CHAPTER
-${chapter.title}
-
-Chapter description: ${chapter.description || ""}
-
-## BEATS TO HIT (in order — these are the plot/character beats you must deliver):
-${beatsText}
+${chapterContentBlock}
 
 ## OUTPUT FORMAT
 Write only the chapter prose. No chapter title header. No beat labels. No meta-commentary. Just the story. Begin immediately with the chapter's first sentence.`;
@@ -326,7 +341,7 @@ Write only the chapter prose. No chapter title header. No beat labels. No meta-c
   try {
     const stream = await openai.chat.completions.create({
       model: "gpt-5.4",
-      max_completion_tokens: Math.min(8192, Math.max(2048, (chapter.beatsJson as string[]).length * 700)),
+      max_completion_tokens: Math.min(8192, Math.max(2048, beats.length * 700)),
       messages: [
         { role: "system", content: systemPrompt },
         {
