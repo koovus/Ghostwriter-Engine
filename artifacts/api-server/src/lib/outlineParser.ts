@@ -88,12 +88,13 @@ export function parseOutline(markdown: string): ParsedOutline {
   };
 
   if (isStructured) {
-    // ── STRUCTURED SUB-CHAPTER FORMAT ────────────────────────────────────────
-    // ## INTRODUCTION        → chapter 0 with H3 sub-sections as beats
-    // ## CHAPTER N: Title    → section label only (not a chapter itself)
-    // #### N.M — Title       → actual chapter entry
-    // **Key Points:**        → next non-empty line, split by comma → beats
-    // **Supporting Examples/Evidence:** → next paragraph → description
+    // ── STRUCTURED FORMAT ─────────────────────────────────────────────────────
+    // ## INTRODUCTION        → chapter 0; H3 sub-sections become beats
+    // ## CHAPTER N: Title    → one chapter per section
+    // #### N.M — SubTitle    → beat on the current chapter ("N.M — SubTitle")
+    // **Key Points:**        → comma-list appended as additional beats
+    // **Supporting Examples/Evidence:** → first paragraph → description
+    // *Target: N words*      → targetWordCount on current chapter
 
     let currentChapter: ParsedChapter | null = null;
     let autoChapterNum = 0;
@@ -106,15 +107,10 @@ export function parseOutline(markdown: string): ParsedOutline {
     for (let j = 0; j < lines.length; j++) {
       const t = lines[j].trim();
 
-      // Horizontal rules act as section boundaries
-      if (t === "---" || t === "***" || t === "___") {
-        continue;
-      }
-
-      // H1 (title already extracted — skip)
+      if (t === "---" || t === "***" || t === "___") continue;
       if (t.startsWith("# ")) continue;
 
-      // ## INTRODUCTION
+      // ## INTRODUCTION → chapter 0
       if (t.match(/^##\s+INTRODUCTION$/i)) {
         pushCurrent(currentChapter);
         currentChapter = { chapterNumber: 0, title: "Introduction", description: "", beats: [] };
@@ -125,10 +121,17 @@ export function parseOutline(markdown: string): ParsedOutline {
         continue;
       }
 
-      // ## CHAPTER N: … — section label, NOT a chapter itself
-      if (t.match(/^##\s+CHAPTER\s+\d+/i)) {
+      // ## CHAPTER N: Title → one real chapter
+      const chapterMatch = t.match(/^##\s+CHAPTER\s+(\d+)[:\s–—-]+(.+)$/i);
+      if (chapterMatch) {
         pushCurrent(currentChapter);
-        currentChapter = null;
+        autoChapterNum++;
+        currentChapter = {
+          chapterNumber: autoChapterNum,
+          title: chapterMatch[2].trim(),
+          description: "",
+          beats: [],
+        };
         inIntroduction = false;
         awaitingIntroContent = false;
         awaitingKeyPoints = false;
@@ -136,10 +139,10 @@ export function parseOutline(markdown: string): ParsedOutline {
         continue;
       }
 
-      // ### Sub-Chapters (literal label in the new format — skip)
+      // ### Sub-Chapters label — skip
       if (t.match(/^###\s+Sub-Chapters?$/i)) continue;
 
-      // H3 inside INTRODUCTION — each section becomes a beat
+      // H3 inside INTRODUCTION — each section heading becomes a beat label
       if (inIntroduction && t.startsWith("### ")) {
         currentIntroSection = t.replace(/^###\s+/, "").trim();
         awaitingIntroContent = true;
@@ -154,34 +157,25 @@ export function parseOutline(markdown: string): ParsedOutline {
         continue;
       }
 
-      // #### N.M — Sub-chapter title → actual chapter
+      // #### N.M — Sub-section title → beat on current chapter
       const h4Match = t.match(/^####\s+(\d+\.\d+)\s*[–—\-]?\s*(.+)$/);
-      if (h4Match) {
-        pushCurrent(currentChapter);
-        autoChapterNum++;
-        currentChapter = {
-          chapterNumber: autoChapterNum,
-          label: h4Match[1].trim(),
-          title: h4Match[2].trim(),
-          description: "",
-          beats: [],
-        };
-        inIntroduction = false;
-        awaitingIntroContent = false;
+      if (h4Match && currentChapter && !inIntroduction) {
+        const beatLabel = `${h4Match[1].trim()} — ${h4Match[2].trim()}`;
+        currentChapter.beats.push(beatLabel);
         awaitingKeyPoints = false;
         awaitingEvidence = false;
         continue;
       }
 
       if (currentChapter && !inIntroduction) {
-        // **Key Points:** marker
+        // **Key Points:** marker — next content line appended to current sub-section beat
         if (t.match(/^\*\*Key Points:\*\*\s*$/i)) {
           awaitingKeyPoints = true;
           awaitingEvidence = false;
           continue;
         }
 
-        // **Supporting Examples/Evidence:** marker (variations)
+        // **Supporting Examples/Evidence:** marker
         if (t.match(/^\*\*Supporting Examples(?:\/Evidence)?:\*\*\s*$/i)) {
           awaitingEvidence = true;
           awaitingKeyPoints = false;
@@ -194,22 +188,23 @@ export function parseOutline(markdown: string): ParsedOutline {
           awaitingEvidence = false;
         }
 
-        // Collect Key Points: next non-empty, non-heading line, split by comma.
+        // Key Points content: merge into the last beat (sub-section title) as detail
         if (awaitingKeyPoints && t && !t.startsWith("#") && !t.startsWith("*Target:") && !t.startsWith("**")) {
-          const points = t.split(",").map(p => p.trim()).filter(p => p.length > 0);
-          currentChapter.beats.push(...points);
+          if (currentChapter.beats.length > 0) {
+            currentChapter.beats[currentChapter.beats.length - 1] += `: ${t}`;
+          }
           awaitingKeyPoints = false;
           continue;
         }
 
-        // Collect Supporting Examples as description (first paragraph only)
+        // Supporting Examples → description (use first sub-section's evidence as chapter description)
         if (awaitingEvidence && t && !t.startsWith("#") && !t.startsWith("*Target:") && !t.startsWith("**") && !currentChapter.description) {
           currentChapter.description = t.replace(/\*\*/g, "").trim();
           awaitingEvidence = false;
           continue;
         }
 
-        // *Target: N,XXX words* — sub-chapter target word count
+        // *Target: N,XXX words* — use last sub-section target as the chapter target
         const targetMatch = t.match(/^\*Target:\s*([\d,]+)\s*words?\*$/i);
         if (targetMatch) {
           const wc = parseInt(targetMatch[1].replace(/,/g, ""), 10);

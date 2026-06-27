@@ -81,14 +81,21 @@ function parsePreview(md: string): { title: string; chapters: DetectedChapter[] 
         awaitingKeyPoints = false;
         continue;
       }
-      if (t.match(/^##\s+CHAPTER\s+\d+/i)) continue;
-      if (t.match(/^###\s+Sub-Chapters?$/i)) continue;
-
-      const h4Match = t.match(/^####\s+\d+\.\d+\s*[–—\-]?\s*(.+)$/);
-      if (h4Match) {
+      // ## CHAPTER N: Title → one chapter
+      const chapterMatch = t.match(/^##\s+CHAPTER\s+(\d+)[:\s–—-]+(.+)$/i);
+      if (chapterMatch) {
         if (currentChapter) chapters.push(currentChapter);
         chapterNum++;
-        currentChapter = { number: chapterNum, title: h4Match[1].trim(), beats: 0 };
+        currentChapter = { number: chapterNum, title: chapterMatch[2].trim(), beats: 0 };
+        awaitingKeyPoints = false;
+        continue;
+      }
+      if (t.match(/^###\s+Sub-Chapters?$/i)) continue;
+
+      // #### N.M → beat on current chapter
+      const h4Match = t.match(/^####\s+\d+\.\d+/);
+      if (h4Match && currentChapter) {
+        currentChapter.beats++;
         awaitingKeyPoints = false;
         continue;
       }
@@ -97,7 +104,6 @@ function parsePreview(md: string): { title: string; chapters: DetectedChapter[] 
         continue;
       }
       if (awaitingKeyPoints && currentChapter && t && !t.startsWith("#") && !t.startsWith("**") && !t.startsWith("*Target:")) {
-        currentChapter.beats += t.split(",").filter(p => p.trim().length > 0).length;
         awaitingKeyPoints = false;
         continue;
       }
