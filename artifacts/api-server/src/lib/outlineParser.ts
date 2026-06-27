@@ -81,7 +81,7 @@ export function parseOutline(markdown: string): ParsedOutline {
 
   // Detect which format the document uses.
   // "Structured" format uses #### N.M — Sub-chapter headings as the actual chapters.
-  const isStructured = lines.some(l => /^####\s+[\d.]+\s*[–—\-]/.test(l.trim()));
+  const isStructured = lines.some(l => /^####\s+\d+\.\d+/.test(l.trim()));
 
   const pushCurrent = (cur: ParsedChapter | null): void => {
     if (cur) chapters.push(cur);
@@ -155,7 +155,7 @@ export function parseOutline(markdown: string): ParsedOutline {
       }
 
       // #### N.M — Sub-chapter title → actual chapter
-      const h4Match = t.match(/^####\s+([\d.]+)\s*[–—\-]+\s*(.+)$/);
+      const h4Match = t.match(/^####\s+(\d+\.\d+)\s*[–—\-]?\s*(.+)$/);
       if (h4Match) {
         pushCurrent(currentChapter);
         autoChapterNum++;

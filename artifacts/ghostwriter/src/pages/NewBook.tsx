@@ -62,7 +62,7 @@ function parsePreview(md: string): { title: string; chapters: DetectedChapter[] 
   const chapters: DetectedChapter[] = [];
   let currentChapter: DetectedChapter | null = null;
 
-  const isStructured = lines.some(l => /^####\s+[\d.]+\s*[–—\-]/.test(l.trim()));
+  const isStructured = lines.some(l => /^####\s+\d+\.\d+/.test(l.trim()));
   let chapterNum = 0;
   let awaitingKeyPoints = false;
 
@@ -84,7 +84,7 @@ function parsePreview(md: string): { title: string; chapters: DetectedChapter[] 
       if (t.match(/^##\s+CHAPTER\s+\d+/i)) continue;
       if (t.match(/^###\s+Sub-Chapters?$/i)) continue;
 
-      const h4Match = t.match(/^####\s+[\d.]+\s*[–—\-]+\s*(.+)$/);
+      const h4Match = t.match(/^####\s+\d+\.\d+\s*[–—\-]?\s*(.+)$/);
       if (h4Match) {
         if (currentChapter) chapters.push(currentChapter);
         chapterNum++;
